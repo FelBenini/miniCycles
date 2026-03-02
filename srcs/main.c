@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "cycles.h"
 #include "input.h"
+#include "material.h"
 #include "mesh.h"
 #include "rt_math.h"
 #include "scene.h"
@@ -13,21 +14,74 @@
 
 void	create_balls(t_scene *scene)
 {
-	t_mesh	plane = generate_plane(100, 100);
+	uint32_t	mat_ball;
+	uint32_t	mat_plane;
+	uint32_t	mat_cone;
+	uint32_t	mat_cube;
+	uint32_t	mat_cylinder;
+	t_mesh		plane;
+	t_mesh		ball;
+	t_mesh		cone;
+	t_mesh		cube;
+	t_mesh		cylinder;
+
+	mat_ball = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.8f, 0.2f, 0.2f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.05f,
+		.metallic = 0.0f,
+		.ior = 1.5f,
+		.type = 0
+	});
+	mat_plane = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.7f, 0.7f, 0.7f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.0f,
+		.metallic = 0.0f,
+		.ior = 1.5f,
+		.type = 0
+	});
+	mat_cone = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.2f, 0.8f, 0.2f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.4f,
+		.metallic = 0.0f,
+		.ior = 1.5f,
+		.type = 0
+	});
+	mat_cube = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.2f, 0.2f, 0.8f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.6f,
+		.metallic = 0.0f,
+		.ior = 1.5f,
+		.type = 0
+	});
+	mat_cylinder = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.8f, 0.8f, 0.2f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.5f,
+		.metallic = 0.5f,
+		.ior = 1.5f,
+		.type = 0
+	});
+
+	plane = generate_plane(100, 100);
 	plane.position = (t_vec4){0.0f, -1.0f, 0.0f, 0.0f};
-	t_mesh	ball = generate_uv_sphere(32, 32, 1.0f);
+	ball = generate_uv_sphere(32, 32, 1.0f);
 	ball.position = (t_vec4){0.0f, 0.0f, 0.0f ,0.0f};
-	t_mesh	cone = generate_cone(12, 32, 1.0f, 3.0f);
+	cone = generate_cone(12, 32, 1.0f, 3.0f);
 	cone.position = (t_vec4){1.5f, 0.0f, 0.0f, 0.0f};
-	t_mesh	cube = generate_cube(2.0f);
+	cube = generate_cube(2.0f);
 	cube.position = (t_vec4){-2.0f, 0.0f,0.0f, 0.0f};
-	t_mesh	cylinder = generate_cylinder(12, 32, 1.0f, 3.0f);
+	cylinder = generate_cylinder(12, 32, 1.0f, 3.0f);
 	cylinder.position = (t_vec4){3.0f, 0.0f, 0.0f, 0.0f};
-	scene_add_mesh(scene, ball);
-	scene_add_mesh(scene, plane);
-	scene_add_mesh(scene, cone);
-	scene_add_mesh(scene, cube);
-	scene_add_mesh(scene, cylinder);
+	
+	scene_add_mesh(scene, ball, mat_ball);
+	scene_add_mesh(scene, plane, mat_plane);
+	scene_add_mesh(scene, cone, mat_cone);
+	scene_add_mesh(scene, cube, mat_cube);
+	scene_add_mesh(scene, cylinder, mat_cylinder);
 }
 
 static void	render_frame(
@@ -48,6 +102,7 @@ static void	render_frame(
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.ssbo_meshes);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.ssbo_bvh_nodes);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, scene.ssbo_tlas_nodes);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, scene.ssbo_materials);
 
 	glBindImageTexture(0, cycles.tex, 0, GL_FALSE, 0,
 		GL_READ_WRITE, GL_RGBA32F);
@@ -100,6 +155,7 @@ int	main(void)
 	scene = scene_create(8);
 	create_balls(&scene);
 	scene_upload_triangles(&scene);
+	scene_upload_materials(&scene);
 	scene_upload_bvh_nodes(&scene);
 	scene_rebuild_tlas(&scene);
 	scene_upload_tlas_nodes(&scene);
@@ -132,6 +188,8 @@ int	main(void)
 		}
 		if (scene.desc_dirty)
 			scene_upload_descriptors(&scene);
+		if (scene.material_dirty)
+			scene_upload_materials(&scene);
 		if (scene.tlas_dirty)
 		{
 			scene_rebuild_tlas(&scene);

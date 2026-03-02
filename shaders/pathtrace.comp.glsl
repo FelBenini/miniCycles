@@ -62,6 +62,15 @@ struct s_tlas_node {
     uint  _padding;
 };
 
+struct s_material {
+    vec4  albedo;
+    vec4  emission;
+    float roughness;
+    float metallic;
+    float ior;
+    uint  type;
+};
+
 struct s_hit {
     float t;
     vec3  pos;
@@ -77,6 +86,7 @@ layout(std430, binding = 2) readonly buffer TriangleNormals { s_triangle_normals
 layout(std430, binding = 3) readonly buffer Meshes { s_mesh_descriptor meshes[]; };
 layout(std430, binding = 4) readonly buffer BVHNodes { s_bvh_node bvh_nodes[]; };
 layout(std430, binding = 5) readonly buffer TLASNodes { s_tlas_node tlas_nodes[]; };
+layout(std430, binding = 6) readonly buffer Materials { s_material materials[]; };
 
 // ------------------------------------------------ RNG
 
@@ -310,7 +320,7 @@ vec3 sample_hemisphere(vec3 N, inout uint seed)
 // ------------------------------------------------ Path tracing core
 
 const vec3 SUN_DIR   = normalize(vec3(-0.6, 1.0, 0.4));
-const vec3 SUN_COLOR = vec3(0.8);
+const vec3 SUN_COLOR = vec3(1.0);
 const float SHADOW_BIAS = 1e-3;
 
 vec3 trace_path(s_ray ray, inout uint seed)
@@ -330,8 +340,20 @@ vec3 trace_path(s_ray ray, inout uint seed)
             break;
         }
 
+        s_mesh_descriptor mesh = meshes[hit.mesh_index];
+        s_material mat = materials[hit.mesh_index];
+
         vec3 N = hit.normal;
-        vec3 albedo = vec3(0.8);
+        vec3 albedo = mat.albedo.rgb;
+        vec3 emission = mat.emission.rgb;
+
+        radiance += throughput * emission;
+
+        float emission_strength = length(emission);
+        if (emission_strength > 0.0)
+        {
+            break;
+        }
 
         // direct sun lighting
         float sun_dot = max(dot(N, SUN_DIR), 0.0);
@@ -344,16 +366,38 @@ vec3 trace_path(s_ray ray, inout uint seed)
 
             s_hit tmp;
             if (!scene_intersect(shadow, tmp))
-                radiance += throughput * SUN_COLOR * sun_dot;
+                radiance += throughput * SUN_COLOR * sun_dot * albedo;
         }
 
-        vec3 new_dir = sample_hemisphere(N, seed);
+		vec3 V = -ray.dir;
 
-        ray.origin  = hit.pos + hit.geo_normal * SHADOW_BIAS;
-        ray.dir     = new_dir;
-        ray.inv_dir = 1.0 / new_dir;
+		// Perfect reflection direction
+		vec3 R = reflect(ray.dir, N);
 
-        throughput *= albedo;
+		// Clamp roughness to avoid degenerate behavior
+		float rough = clamp(mat.roughness, 0.001, 1.0);
+
+		// ---- Glossy reflection ----
+		// Perturb reflection direction by sampling around it
+		vec3 glossy_dir = normalize(
+		    R + rough * sample_hemisphere(N, seed)
+		);
+
+		// ---- Diffuse direction ----
+		vec3 diffuse_dir = sample_hemisphere(N, seed);
+
+		vec3 new_dir = normalize(mix(glossy_dir, diffuse_dir, rough));
+
+		ray.origin  = hit.pos + hit.geo_normal * SHADOW_BIAS;
+		ray.dir     = new_dir;
+		ray.inv_dir = 1.0 / new_dir;
+
+		// Energy balance
+		vec3 specular_color = mix(vec3(1.0), albedo, mat.metallic);
+		vec3 diffuse_color  = albedo * (1.0 - mat.metallic);
+
+		// Blend energy contribution
+		throughput *= mix(specular_color, diffuse_color, rough);
 
         float p = max(throughput.r, max(throughput.g, throughput.b));
         if (bounce > 2)

@@ -9,6 +9,7 @@
 # define MESHES_SSBOS 3
 # define BVH_SSBOS 4
 # define TLAS_SSBOS 5
+# define MATERIALS_SSBOS 6
 
 typedef struct s_cycles
 {

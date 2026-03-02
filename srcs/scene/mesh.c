@@ -28,7 +28,22 @@ static float	compute_bounding_radius(t_mesh *mesh)
 	return (sqrtf(max_r2));
 }
 
-uint32_t	scene_add_mesh(t_scene *scene, t_mesh mesh)
+uint32_t	scene_add_material(t_scene *scene, t_material material)
+{
+	uint32_t	index;
+
+	if (scene->material_count == scene->material_capacity)
+	{
+		scene->material_capacity *= 2;
+		scene->materials = realloc(scene->materials, sizeof(t_material) * scene->material_capacity);
+	}
+	index = scene->material_count++;
+	scene->materials[index] = material;
+	scene->material_dirty = 1;
+	return (index);
+}
+
+uint32_t	scene_add_mesh(t_scene *scene, t_mesh mesh, uint32_t material_index)
 {
 	uint32_t	index;
 
@@ -40,6 +55,7 @@ uint32_t	scene_add_mesh(t_scene *scene, t_mesh mesh)
 		scene->bvhs = realloc(scene->bvhs, sizeof(t_bvh) * scene->mesh_capacity);
 	}
 	index = scene->mesh_count++;
+	mesh.material_index = material_index;
 	scene->meshes[index] = mesh;
 	scene->descriptors[index] = (t_mesh_descriptor){.position = mesh.position,
 		.tri_offset = 0, .tri_count = mesh.triangle_count, .bvh_root = 0,

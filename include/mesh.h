@@ -11,6 +11,7 @@ typedef struct s_mesh {
 	t_vec4		position;
 	t_vec4		scale;
 	uint32_t	smooth;
+	uint32_t	material_index;
 }	t_mesh;
 
 t_mesh generate_uv_sphere(int stacks, int slices, float radius);
