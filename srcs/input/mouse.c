@@ -1,39 +1,44 @@
 #include "cycles.h"
 #include "camera.h"
 #include <GLFW/glfw3.h>
+#include <math.h>
 
-static int	g_first_move = 0;
-static int	g_mouse_look = 0;
+static int		g_first_move = 0;
+static int		g_mouse_look = 0;
+static double	g_last_time = 0.0;
 
 void	mouse_callback(GLFWwindow *win, double x, double y)
 {
 	static double	last_x;
 	static double	last_y;
 	t_camera		*cam;
+	double			now;
+	double			dt;
+	float			dx;
+	float			dy;
 
 	cam = glfwGetWindowUserPointer(win);
 	if (!g_mouse_look)
 	{
 		g_first_move = 1;
+		return;
+	}
+	now = glfwGetTime();
+	dt = now - g_last_time;
+	g_last_time = now;
+	if (g_first_move) {
+		last_x = x;
+		last_y = y;
+		g_first_move = 0;
 		return ;
 	}
-	if (g_first_move)
-	{
-		last_x = x;
-        last_y = y;
-		g_first_move = 0;
-        return ;
-    }
-	float dx =  (float)(x - last_x) * CAM_SENSITIVITY;
-	float dy = -(float)(y - last_y) * CAM_SENSITIVITY;
+	dx = (float)(x - last_x) * CAM_SENSITIVITY * (float)dt;
+	dy = (float)(y - last_y) * CAM_SENSITIVITY * (float)dt;
 	last_x = x;
 	last_y = y;
-	cam->yaw   -= dx;
-	cam->pitch += dy;
-	if (cam->pitch >  1.5f)
-		cam->pitch =  1.5f;
-	if (cam->pitch < -1.5f)
-		cam->pitch = -1.5f;
+	cam->yaw -= dx;
+	cam->pitch -= dy;
+	cam->pitch = fmaxf(-1.5f, fminf(1.5f, cam->pitch));
 }
 
 void	scroll_callback(GLFWwindow *win, double xoffset, double yoffset)

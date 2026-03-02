@@ -27,7 +27,7 @@ typedef struct s_cam_uniforms
 }	t_cam_uniforms;
 
 # define CAM_SPEED 0.05f
-# define CAM_SENSITIVITY 0.001f
+# define CAM_SENSITIVITY 0.05f
 
 t_camera		camera_create(float x, float y, float z, float fov_deg);
 void			upload_camera(GLuint program, t_cam_uniforms u, t_camera *cam);
