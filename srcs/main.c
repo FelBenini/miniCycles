@@ -1,3 +1,4 @@
+#include "bvh.h"
 #include "camera.h"
 #include "cycles.h"
 #include "input.h"
@@ -19,7 +20,6 @@ void	create_balls(t_scene *scene)
 	uint32_t	mat_cone;
 	uint32_t	mat_cube;
 	uint32_t	mat_cylinder;
-	uint32_t	mat_torus;
 	t_mesh		plane;
 	t_mesh		ball;
 	t_mesh		cone;
@@ -67,14 +67,6 @@ void	create_balls(t_scene *scene)
 		.ior = 1.5f,
 		.type = 0
 	});
-	mat_torus = scene_add_material(scene, (t_material){
-		.albedo = (t_vec4){0.2f, 0.2f, 0.8f, 1.0f},
-		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
-		.roughness = 0.0f,
-		.metallic = 0.5f,
-		.ior = 1.5f,
-		.type = 0
-	});
 
 	plane = generate_plane(100, 100);
 	plane.position = (t_vec4){0.0f, -1.0f, 0.0f, 0.0f};
@@ -94,7 +86,7 @@ void	create_balls(t_scene *scene)
 	scene_add_mesh(scene, cone, mat_cone);
 	scene_add_mesh(scene, cube, mat_cube);
 	scene_add_mesh(scene, cylinder, mat_cylinder);
-	scene_add_mesh(scene, torus, mat_torus);
+	scene_add_mesh(scene, torus, mat_cube);
 }
 
 static void	render_frame(

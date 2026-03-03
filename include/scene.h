@@ -15,6 +15,8 @@ typedef struct s_mesh_descriptor {
     uint32_t tri_count;
 	uint32_t smooth;
 	uint32_t bvh_root;
+	uint32_t material;
+	uint32_t pad[3];
 } t_mesh_descriptor;
 
 typedef struct s_scene {

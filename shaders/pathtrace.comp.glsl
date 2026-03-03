@@ -42,6 +42,8 @@ struct s_mesh_descriptor {
     uint  tri_count;
     uint  smooth_shade;
     uint  bvh_root;
+	uint  material;
+	uint  pad[3];
 };
 
 struct s_bvh_node {
@@ -377,7 +379,7 @@ vec3 trace_path(s_ray ray, inout uint seed)
         }
 
         s_mesh_descriptor mesh = meshes[hit.mesh_index];
-        s_material mat = materials[hit.mesh_index];
+        s_material mat = materials[mesh.material];
 
         vec3 N = hit.normal;
         vec3 albedo = mat.albedo.rgb;
