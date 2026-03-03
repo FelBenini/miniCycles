@@ -14,14 +14,16 @@ typedef struct s_mesh {
 	uint32_t	material_index;
 }	t_mesh;
 
-t_mesh generate_uv_sphere(int stacks, int slices, float radius);
+t_mesh	generate_uv_sphere(int stacks, int slices, float radius);
 
-t_mesh generate_plane(float x_size, float y_size);
+t_mesh	generate_plane(float x_size, float y_size);
 
 t_mesh	generate_cube(float size);
 
 t_mesh generate_cone(int stacks, int slices, float radius, float height);
 
 t_mesh	generate_cylinder(int stacks, int slices, float radius, float height);
+
+t_mesh	generate_torus(int stacks, int slices, float major_radius, float minor_radius);
 
 #endif

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "mesh.h"
 
-t_mesh generate_uv_sphere(int stacks, int slices, float radius)
+t_mesh	generate_uv_sphere(int stacks, int slices, float radius)
 {
 	t_mesh mesh;
 

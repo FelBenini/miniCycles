@@ -19,11 +19,13 @@ void	create_balls(t_scene *scene)
 	uint32_t	mat_cone;
 	uint32_t	mat_cube;
 	uint32_t	mat_cylinder;
+	uint32_t	mat_torus;
 	t_mesh		plane;
 	t_mesh		ball;
 	t_mesh		cone;
 	t_mesh		cube;
 	t_mesh		cylinder;
+	t_mesh		torus;
 
 	mat_ball = scene_add_material(scene, (t_material){
 		.albedo = (t_vec4){0.8f, 0.2f, 0.2f, 1.0f},
@@ -65,6 +67,14 @@ void	create_balls(t_scene *scene)
 		.ior = 1.5f,
 		.type = 0
 	});
+	mat_torus = scene_add_material(scene, (t_material){
+		.albedo = (t_vec4){0.2f, 0.2f, 0.8f, 1.0f},
+		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
+		.roughness = 0.0f,
+		.metallic = 0.5f,
+		.ior = 1.5f,
+		.type = 0
+	});
 
 	plane = generate_plane(100, 100);
 	plane.position = (t_vec4){0.0f, -1.0f, 0.0f, 0.0f};
@@ -76,12 +86,15 @@ void	create_balls(t_scene *scene)
 	cube.position = (t_vec4){-2.0f, 0.0f,0.0f, 0.0f};
 	cylinder = generate_cylinder(12, 32, 1.0f, 3.0f);
 	cylinder.position = (t_vec4){3.0f, 0.0f, 0.0f, 0.0f};
-	
+	torus = generate_torus(32, 42, 1.5f, 0.5f);
+	torus.position = (t_vec4){7.0f, -0.5f, 0.0f, 0.0f};
+
 	scene_add_mesh(scene, ball, mat_ball);
 	scene_add_mesh(scene, plane, mat_plane);
 	scene_add_mesh(scene, cone, mat_cone);
 	scene_add_mesh(scene, cube, mat_cube);
 	scene_add_mesh(scene, cylinder, mat_cylinder);
+	scene_add_mesh(scene, torus, mat_torus);
 }
 
 static void	render_frame(
