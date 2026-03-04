@@ -28,6 +28,7 @@ typedef struct s_scene {
     t_triangle        *triangles;
     t_bvh             *bvhs;
     t_tlas             tlas;
+	t_vec4             ambient;
     uint32_t           mesh_count;
     uint32_t           mesh_capacity;
     uint32_t           material_count;

@@ -96,6 +96,7 @@ static void	render_frame(
 	GLint loc_mesh_count,
 	GLint loc_frame_index,
 	GLint loc_reset_samples,
+	GLint loc_ambient_color,
 	GLint loc_accumulation_tex_fs,
 	t_scene scene,
 	uint32_t frame_index,
@@ -109,6 +110,8 @@ static void	render_frame(
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.ssbo_bvh_nodes);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, scene.ssbo_tlas_nodes);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, scene.ssbo_materials);
+
+	glUniform4f(loc_ambient_color, scene.ambient.x, scene.ambient.y, scene.ambient.z, scene.ambient.w);
 
 	glBindImageTexture(0, cycles.tex, 0, GL_FALSE, 0,
 		GL_READ_WRITE, GL_RGBA32F);
@@ -152,6 +155,7 @@ int	main(int argc, char *argv[])
 	GLint	loc_frame_index;
 	GLint	loc_reset_samples;
 	GLint	loc_accumulation_tex_fs;
+	GLint	loc_ambient_color;
 
 	uint32_t frame_index = 0;
 	uint32_t reset_samples = 1;
@@ -178,6 +182,8 @@ int	main(int argc, char *argv[])
 		cycles.compute_program, "u_frame_index");
 	loc_reset_samples = glGetUniformLocation(
 		cycles.compute_program, "u_reset_samples");
+	loc_ambient_color = glGetUniformLocation(
+				cycles.compute_program, "u_ambient_color");
 	loc_accumulation_tex_fs = glGetUniformLocation(
 		cycles.fullscreen_program, "u_accumulation_tex");
 	while (!glfwWindowShouldClose(cycles.win))
@@ -210,6 +216,7 @@ int	main(int argc, char *argv[])
 			loc_mesh_count,
 			loc_frame_index,
 			loc_reset_samples,
+			loc_ambient_color,
 			loc_accumulation_tex_fs,
 			scene,
 			frame_index,

@@ -48,6 +48,10 @@ void	process_line(t_scene *scene, char *line)
 		process_plane(scene, line);
 	if (strncmp(&line[i], "sp", 2) == 0)
 		process_sphere(scene, line);
+	if (strncmp(&line[i], "cb", 2) == 0)
+		process_cube(scene, line);
+	if (strncmp(&line[i], "A", 1) == 0)
+		process_ambient(scene, line);
 }
 
 t_scene	parse_scene(char *filename)

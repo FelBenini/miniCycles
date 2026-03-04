@@ -11,6 +11,7 @@ uniform vec3  u_cam_forward;
 uniform vec3  u_cam_right;
 uniform vec3  u_cam_up;
 uniform float u_cam_fov;
+uniform vec4  u_ambient_color;
 
 // Progressive sampling control
 uniform uint u_frame_index;   // increment every frame
@@ -327,10 +328,10 @@ bool scene_intersect(s_ray ray_world, out s_hit hit)
 
 // ------------------------------------------------ Sky
 
-vec3 sky_color(vec3 dir)
+vec3 sky_color()
 {
-    float t = 0.5 * (dir.y + 1.0);
-    return mix(vec3(0.6,0.7,1.0), vec3(0.05,0.1,0.2), t);
+	vec3 color = vec3(u_ambient_color.xyz);
+    return color;
 }
 
 // ------------------------------------------------ Hemisphere sampling
@@ -374,7 +375,7 @@ vec3 trace_path(s_ray ray, inout uint seed)
 
         if (!scene_intersect(ray, hit))
         {
-            radiance += throughput * sky_color(ray.dir);
+            radiance += throughput * sky_color();
             break;
         }
 
