@@ -1,6 +1,8 @@
 #ifndef RT_MATH_H
 # define RT_MATH_H
 
+# include <math.h>
+
 typedef struct s_vec4
 {
 	float	x;
@@ -24,6 +26,10 @@ typedef struct s_vertex
 
 t_vec4	vec4_from_vec3(t_vec3 v, float w);
 t_vec3	vec3_from_vec4(t_vec4 v);
+
+t_vec4	vec4_create(float x, float y, float z, float w);
+t_vec4	vec4_normalize(t_vec4 v);
+t_vec4	vec4_cross(t_vec4 a, t_vec4 b);
 
 // vec3
 

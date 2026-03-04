@@ -1,6 +1,7 @@
 #include "bvh.h"
 #include "scene.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 static void	compute_mesh_bbox(t_mesh_descriptor *descriptor,
 								t_vec4 *out_min, t_vec4 *out_max)
@@ -77,9 +78,15 @@ static uint32_t	find_split_index(t_mesh_descriptor *descriptors, uint32_t *indic
 	float		cost;
 	t_vec4		lmin, lmax, rmin, rmax;
 	t_vec4		mesh_min, mesh_max;
-	t_vec4		prefix_min[256];
-	t_vec4		prefix_max[256];
+	t_vec4  *prefix_min = malloc(count * sizeof(t_vec4));
+	t_vec4  *prefix_max = malloc(count * sizeof(t_vec4));
 
+	if (!prefix_min || !prefix_max)
+	{
+    	free(prefix_min);
+	    free(prefix_max);
+	    return (start + 1);
+	}
 	parent_sa  = sah_surface_area(bbox_min, bbox_max);
 	best_cost  = 1e30f;
 	best_split = start + 1;
@@ -158,6 +165,8 @@ static uint32_t	find_split_index(t_mesh_descriptor *descriptors, uint32_t *indic
 		indices[k + 1] = key;
 		j++;
 	}
+    free(prefix_min);
+	free(prefix_max);
 	return (best_split);
 }
 

@@ -4,6 +4,7 @@
 #include "input.h"
 #include "material.h"
 #include "mesh.h"
+#include "parser.h"
 #include "rt_math.h"
 #include "scene.h"
 #include <GLFW/glfw3.h>
@@ -38,8 +39,8 @@ void	create_balls(t_scene *scene)
 	mat_plane = scene_add_material(scene, (t_material){
 		.albedo = (t_vec4){0.7f, 0.7f, 0.7f, 1.0f},
 		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
-		.roughness = 0.0f,
-		.metallic = 0.0f,
+		.roughness = 1.0f,
+		.metallic = 0.5f,
 		.ior = 1.5f,
 		.type = 0
 	});
@@ -60,10 +61,10 @@ void	create_balls(t_scene *scene)
 		.type = 0
 	});
 	mat_cylinder = scene_add_material(scene, (t_material){
-		.albedo = (t_vec4){0.8f, 0.8f, 0.2f, 1.0f},
+		.albedo = (t_vec4){0.3f, 0.3f, 0.05f, 1.0f},
 		.emission = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f},
-		.roughness = 0.5f,
-		.metallic = 0.5f,
+		.roughness = 0.05f,
+		.metallic = 0.0f,
 		.ior = 1.5f,
 		.type = 0
 	});
@@ -139,11 +140,10 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 	glfwSetMouseButtonCallback(cycles.win, mouse_button_callback);
 }
 
-int	main(void)
+int	main(int argc, char *argv[])
 {
 	t_cycles		cycles;
 	t_scene			scene;
-	t_camera		cam;
 	t_cam_uniforms	cam_u;
 	char			title[126];
 
@@ -156,16 +156,19 @@ int	main(void)
 	uint32_t frame_index = 0;
 	uint32_t reset_samples = 1;
 
+	if (argc != 2)
+	{
+		printf("Please, pass a file as an argument.\n");
+		return (1);
+	}
 	cycles = init_cycles();
-	scene = scene_create(8);
-	create_balls(&scene);
+	scene = parse_scene(argv[1]);
 	scene_upload_triangles(&scene);
 	scene_upload_materials(&scene);
 	scene_upload_bvh_nodes(&scene);
 	scene_rebuild_tlas(&scene);
 	scene_upload_tlas_nodes(&scene);
-	cam = camera_create(0.0f, 0.0f, 3.0f, 60.0f);
-	register_callbacks(cycles, &cam);
+	register_callbacks(cycles, &scene.camera);
 	cam_u = get_cam_uniform_locations(cycles.compute_program);
 	loc_resolution = glGetUniformLocation(
 		cycles.compute_program, "u_resolution");
@@ -180,8 +183,8 @@ int	main(void)
 	while (!glfwWindowShouldClose(cycles.win))
 	{
 		glfwPollEvents();
-		handle_input(cycles.win, &cam);
-		if (cam.dirty)
+		handle_input(cycles.win, &scene.camera);
+		if (scene.camera.dirty)
 		{
 			frame_index = 0;
 			reset_samples = 1;
@@ -189,7 +192,7 @@ int	main(void)
 		else
 		{
 			reset_samples = 0;
-			cam.dirty = 0;
+			scene.camera.dirty = 0;
 		}
 		if (scene.desc_dirty)
 			scene_upload_descriptors(&scene);
@@ -200,7 +203,7 @@ int	main(void)
 			scene_rebuild_tlas(&scene);
 			scene_upload_tlas_nodes(&scene);
 		}
-		upload_camera(cycles.compute_program, cam_u, &cam);
+		upload_camera(cycles.compute_program, cam_u, &scene.camera);
 		render_frame(
 			cycles,
 			loc_resolution,
@@ -215,7 +218,7 @@ int	main(void)
 		snprintf(title, sizeof(title), "miniCycles | sample %u", frame_index);
 		glfwSetWindowTitle(cycles.win, title);
 		glfwSwapBuffers(cycles.win);
-		cam.dirty = 0;
+		scene.camera.dirty = 0;
 	}
 	scene_destroy(&scene);
 	glfwTerminate();

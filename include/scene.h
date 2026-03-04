@@ -3,6 +3,7 @@
 
 # include <stdint.h>
 # include "../glad/include/glad/glad.h"
+#include "camera.h"
 # include "mesh.h"
 # include "material.h"
 # include "rt_math.h"
@@ -32,6 +33,7 @@ typedef struct s_scene {
     uint32_t           material_count;
     uint32_t           material_capacity;
     uint32_t           triangle_count;
+	t_camera           camera;
 
     GLuint             ssbo_triangles;
     GLuint             ssbo_normals;
