@@ -36,6 +36,7 @@ void	process_plane(t_scene *scene, char *line)
 	emission.y /= 256.0f;
 	emission.z /= 256.0f;
 	plane = generate_plane(sizex, sizey);
+	plane.direction = vec4_create(nx, ny, nz, 1.0f);
 	plane.position = vec4_create(px, py, pz, 1.0f);
 	material.albedo    = vec4_create(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 	material.roughness = roughness;

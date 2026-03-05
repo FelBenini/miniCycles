@@ -12,6 +12,7 @@
 // Mirror of s_mesh_descriptor in the compute shader (std430 aligned)
 typedef struct s_mesh_descriptor {
     t_vec4   position;    // xyz = world position, w = bounding radius
+	t_vec4   direction;
     uint32_t tri_offset;  // start index into the global triangle array
     uint32_t tri_count;
 	uint32_t smooth;

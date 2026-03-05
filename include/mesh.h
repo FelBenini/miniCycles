@@ -9,6 +9,7 @@ typedef struct s_mesh {
 	t_triangle	*triangles;
 	uint32_t	triangle_count;
 	t_vec4		position;
+	t_vec4      direction;
 	t_vec4		scale;
 	uint32_t	smooth;
 	uint32_t	material_index;

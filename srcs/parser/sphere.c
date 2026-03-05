@@ -29,6 +29,7 @@ void	process_sphere(t_scene *scene, char *line)
 	}
 	sphere = generate_uv_sphere(40, 40, diameter / 2.0f);
 	sphere.position = vec4_create(px, py + diameter / 2.0f, pz, 1.0f);
+	sphere.direction = vec4_create(1.0f, 1.0f, 1.0f, 1.0f);
 	material.albedo    = vec4_create(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 	material.roughness = roughness;
 	material.metallic  = metallic;

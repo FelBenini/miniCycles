@@ -52,6 +52,7 @@ static int	rebuild_flat_triangle_array(t_scene *scene)
 		scene->descriptors[i].tri_count = curr_mesh->triangle_count;
 		scene->descriptors[i].smooth = curr_mesh->smooth;
 		scene->descriptors[i].material = curr_mesh->material_index;
+		scene->descriptors[i].direction = curr_mesh->direction;
 		offset += curr_mesh->triangle_count;
 		i++;
 	}

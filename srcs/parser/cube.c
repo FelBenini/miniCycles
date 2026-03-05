@@ -42,6 +42,7 @@ void	process_cube(t_scene *scene, char *line)
 	}
 	cube = generate_cube(diameter);
 	cube.position = vec4_create(px, py + diameter / 2.0f, pz, 1.0f);
+	cube.direction = vec4_create(nx, ny, nz, 1.0f);
 	material.albedo    = vec4_create(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 	material.roughness = roughness;
 	material.metallic  = metallic;
