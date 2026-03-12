@@ -16,7 +16,7 @@ typedef struct s_material
 	int			texture_idx;
 	int			displacement_tex_idx;
 	int			roughness_tex_idx;
-	float		pad;
+	float		texture_tile_size;
 }	t_material;
 
 #endif

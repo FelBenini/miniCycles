@@ -2,6 +2,7 @@
 #include "mesh.h"
 #include "rt_math.h"
 #include "scene.h"
+#include "parser.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -20,18 +21,26 @@ void	process_obj(t_scene *scene, char *line)
 	t_material	material;
 	t_vec4		pos;
 	t_vec4		dir;
+	char		texture_idx[125] = "";
+	char		rough_idx[125] = "";
+	char		disp_idx[125] = "";
 
 	roughness = 0.8f;
 	metallic = 0;
 	pos = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f};
 	dir = (t_vec4){0.0f, 0.0f, 0.0f, 1.0f};
-	if (sscanf(line, "obj %s %f,%f,%f %f,%f,%f %f,%f,%f %f %f %f,%f,%f",
+	material.texture_idx = -1;
+	material.displacement_tex_idx = -1;
+	material.roughness_tex_idx = -1;
+	material.texture_tile_size = 1.0;
+	if (sscanf(line, "obj %s %f,%f,%f %f,%f,%f %f,%f,%f %f %f %f,%f,%f %s %s %s %f",
 				path,
 				&pos.x, &pos.y, &pos.z,
 				&dir.x, &dir.y, &dir.z,
 				&r, &g, &b,
 				&roughness, &metallic,
-				&er, &eg, &eb) < 10)
+				&er, &eg, &eb,
+				texture_idx, disp_idx, rough_idx, &material.texture_tile_size) < 10)
 	{
 		printf("Obj invalid format.\n");
 		return ;
@@ -40,8 +49,9 @@ void	process_obj(t_scene *scene, char *line)
 	material.emission = (t_vec4){er / 255, eg / 255, eb / 255, 0.0f};
 	material.roughness = roughness;
 	material.metallic = metallic;
-	material.texture_idx = -1;
-	material.displacement_tex_idx = -1;
+	material.texture_idx = get_texture_if_valid(scene, texture_idx);
+	material.displacement_tex_idx = get_texture_if_valid(scene, disp_idx);
+	material.roughness_tex_idx = get_texture_if_valid(scene, rough_idx);
 	obj = load_mesh_from_obj(path, 1.0f);
 	obj.position = pos;
 	obj.direction = dir;

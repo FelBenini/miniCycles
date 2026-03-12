@@ -1,5 +1,6 @@
 #include "rt_math.h"
 #include "scene.h"
+#include "parser.h"
 #include <stdio.h>
 
 void	process_sphere(t_scene *scene, char *line)
@@ -14,14 +15,22 @@ void	process_sphere(t_scene *scene, char *line)
 	float		roughness = 0.7f;
 	float		metallic = 0.0f;
 	t_vec4		emission;
+	char		texture_idx[125] = "";
+	char		rough_idx[125] = "";
+	char		disp_idx[125] = "";
 
 	emission = vec4_create(0, 0, 0, 1);
-	matched = sscanf(line, "sp %f,%f,%f %f %f,%f,%f %f %f %f,%f,%f",
+	material.texture_idx = -1;
+	material.displacement_tex_idx = -1;
+	material.roughness_tex_idx = -1;
+	material.texture_tile_size = 1.0;
+	matched = sscanf(line, "sp %f,%f,%f %f %f,%f,%f %f %f %f,%f,%f %s %s %s %f",
 		&px, &py, &pz,
 		&diameter,
 		&r, &g, &b,
 		&roughness, &metallic,
-		&emission.x, &emission.y, &emission.z);
+		&emission.x, &emission.y, &emission.z,
+		texture_idx, disp_idx, rough_idx, &material.texture_tile_size);
 	if (matched < 7)
 	{
 		printf("Error: invalid sphere format.\n");
@@ -33,9 +42,9 @@ void	process_sphere(t_scene *scene, char *line)
 	material.albedo    = vec4_create(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 	material.roughness = roughness;
 	material.metallic  = metallic;
-	material.texture_idx = 1;
-	material.displacement_tex_idx = 2;
-	material.roughness_tex_idx = 2;
+	material.texture_idx = get_texture_if_valid(scene, texture_idx);
+	material.roughness_tex_idx = get_texture_if_valid(scene, rough_idx);
+	material.displacement_tex_idx = get_texture_if_valid(scene, disp_idx);
 	emission.x /= 255.0f;
 	emission.y /= 255.0f;
 	emission.z /= 255.0f;

@@ -21,5 +21,6 @@ void	process_light(t_scene *scene, char *line)
 	color.y /= 255 * intensity;
 	color.z /= 255 * intensity;
 	light.color = color;
+	light.type = 0;
 	scene_add_light(scene, light);
 }

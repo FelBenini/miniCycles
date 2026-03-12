@@ -1,10 +1,12 @@
 C  -30.0,2,0 0.5,0,0 70
-pl 1.0,0.0,0.0 0.0,0.0,0.0 0,12,71 1000,1000 0.8
+pl 1.0,0.0,0.0     0.0,0.0,0.0     0,0,0    1000,1000 0.0 1.0     0,0,0    assets/ground.jpg      assets/ground_disp.jpg    assets/ground_rough.jpg     100.0
 
-cb 0.0,0,-14.0   0.01,0.0,0.01  12.6         255,10,10
-sp -47.0,0.0,3.0  3.6 255,10,10 0.8
+cb 0.0,0,-14.0   0.01,0.0,0.01  12.6         255,10,10   0.2 0.6   0,0,0 assets/rocks.jpg    assets/disp_rocks.jpg  assets/rough_rocks.jpg
+sp -47.0,0.0,3.0  3.6 10,10,10 0.025 0.5    0,0,0     none      assets/tiles_disp.jpg
 
-obj assets/bunny.obj   0,0.3,0     0,0,0      200,200,200 0.0 0.0   5000,5000,5000
+sp  3,15.9,-15   1  255,255,255      0 0      2555,2555,2555
+
+obj assets/bunny.obj   0,12.6,-14     0,0,0      200,200,200
 obj assets/monkey.obj   3,1.0,0     1,0,0      200,200,200
 
-A assets/horn-koppe_spring_contrast.jpg
+A assets/citrus_orchard_road_puresky.jpg

@@ -12,5 +12,6 @@ void	process_ambient(t_scene *scene, char *line);
 void	process_torus(t_scene *scene, char *line);
 void	process_obj(t_scene *scene, char *line);
 void	process_light(t_scene *scene, char *line);
+int	get_texture_if_valid(t_scene *scene, char *path);
 
 #endif

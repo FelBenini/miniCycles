@@ -47,6 +47,56 @@ vec3 sample_hemisphere(vec3 N, inout uint seed)
         cos_theta * N);
 }
 
+void trace_textures(
+    s_material mat,
+    inout vec3 N,
+    inout s_hit hit,
+    inout vec3 albedo,
+    inout float rough
+)
+{
+    float uv_scale = mat.texture_tile_size;
+    vec2 uv = fract(hit.uv * uv_scale);
+
+    if (mat.texture_idx != -1)
+    {
+        vec4 tex_color = sample_image(uint(mat.texture_idx), uv);
+        albedo = tex_color.rgb;
+    }
+
+    if (mat.texture_displacement_idx != -1)
+    {
+        uint disp_idx = uint(mat.texture_displacement_idx);
+        s_image_meta meta = img_info[disp_idx];
+
+        vec2 texel = vec2(1.0 / float(meta.width), 1.0 / float(meta.height));
+
+        float hL = sample_image(disp_idx, uv - vec2(texel.x, 0.0)).r;
+        float hR = sample_image(disp_idx, uv + vec2(texel.x, 0.0)).r;
+        float hD = sample_image(disp_idx, uv - vec2(0.0, texel.y)).r;
+        float hU = sample_image(disp_idx, uv + vec2(0.0, texel.y)).r;
+
+        float dHdU = (hR - hL) * 0.5;
+        float dHdV = (hU - hD) * 0.5;
+
+        vec3 T = normalize(abs(N.x) > 0.1
+            ? cross(vec3(0,1,0), N)
+            : cross(vec3(1,0,0), N));
+
+        vec3 B = normalize(cross(N, T));
+
+        float scale = 0.5;
+
+        N = normalize(N - scale * (dHdU * T + dHdV * B));
+    }
+
+    if (mat.roughness_tex_idx != -1)
+    {
+        vec4 rough_tex = sample_image(uint(mat.roughness_tex_idx), uv);
+        rough = mat.roughness + rough_tex.r * (1.0 - mat.roughness);
+    }
+}
+
 vec3 trace_path(s_ray ray, inout uint seed)
 {
     vec3 throughput = vec3(1.0);
@@ -68,46 +118,10 @@ vec3 trace_path(s_ray ray, inout uint seed)
         vec3 N        = hit.normal;
         vec3 albedo   = mat.albedo.rgb;
         vec3 emission = mat.emission.rgb;
+        float rough   = mat.roughness;
         vec3 direct;
 
-        if (mat.texture_idx != -1)
-        {
-            vec4 tex_color = sample_image(uint(mat.texture_idx), hit.uv);
-            albedo = tex_color.rgb;
-        }
-
-		if (mat.texture_displacement_idx != -1)
-		{
-		    uint disp_idx = uint(mat.texture_displacement_idx);
-		    s_image_meta meta = img_info[disp_idx];
-
-		    vec2 texel = vec2(1.0 / float(meta.width), 1.0 / float(meta.height));
-
-		    float hL = sample_image(disp_idx, hit.uv - vec2(texel.x, 0.0)).r;
-		    float hR = sample_image(disp_idx, hit.uv + vec2(texel.x, 0.0)).r;
-		    float hD = sample_image(disp_idx, hit.uv - vec2(0.0, texel.y)).r;
-		    float hU = sample_image(disp_idx, hit.uv + vec2(0.0, texel.y)).r;
-
-		    float dHdU = (hR - hL) * 0.5;
-		    float dHdV = (hU - hD) * 0.5;
-
-		    vec3 T = normalize(abs(N.x) > 0.1
-		        ? cross(vec3(0,1,0), N)
-		        : cross(vec3(1,0,0), N));
-
-		    vec3 B = normalize(cross(N, T));
-
-		    float scale = 0.5;
-
-		    N = normalize(N - scale * (dHdU * T + dHdV * B));
-		}
-
-		float rough = mat.roughness;
-		if (mat.roughness_tex_idx != -1)
-		{
-		    vec4 rough_tex = sample_image(uint(mat.roughness_tex_idx), hit.uv);
-		    rough = mat.roughness + rough_tex.r * (1.0 - mat.roughness);
-		}
+        trace_textures(mat, N, hit, albedo, rough);
 
         radiance += throughput * emission;
         if (length(emission) > 0.0) break;
@@ -124,6 +138,7 @@ vec3 trace_path(s_ray ray, inout uint seed)
 
         if (dot(glossy_dir, N) < 0.0)
             glossy_dir = diffuse_dir;
+
         vec3 new_dir = normalize(mix(glossy_dir, diffuse_dir, rough));
 
         ray.origin  = hit.pos + N * adaptive_bias;

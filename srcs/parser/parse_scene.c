@@ -1,13 +1,17 @@
-#include "camera.h"
 #include "parser.h"
-#include "rt_math.h"
 #include "scene.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
+
+int	get_texture_if_valid(t_scene *scene, char *path)
+{
+	if (strlen(path) > 0)
+		return (scene_load_image(scene, path));
+	return (-1);
+}
 
 static char	*read_line(FILE *file)
 {
