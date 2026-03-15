@@ -82,7 +82,9 @@ struct s_material {
 	int   texture_idx;
 	int   texture_displacement_idx;
 	int   roughness_tex_idx;
+	int   normal_tex_idx;
 	float texture_tile_size;
+	float pad[3];
 };
 
 struct s_hit {

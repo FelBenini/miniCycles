@@ -28,6 +28,7 @@ void	process_plane(t_scene *scene, char *line)
 	material.texture_idx = -1;
 	material.displacement_tex_idx = -1;
 	material.roughness_tex_idx = -1;
+	material.normal_tex_idx = -1;
 	material.texture_tile_size = 1.0;
 	if (sscanf(line, "pl %f,%f,%f %f,%f,%f %f,%f,%f %f,%f %f %f %f,%f,%f %s %s %s %f",
 		&px, &py, &pz,

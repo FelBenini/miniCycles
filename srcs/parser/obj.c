@@ -24,6 +24,7 @@ void	process_obj(t_scene *scene, char *line)
 	char		texture_idx[125] = "";
 	char		rough_idx[125] = "";
 	char		disp_idx[125] = "";
+	char		normal_idx[125] = "";
 	float		mesh_scale;
 
 	roughness = 0.8f;
@@ -33,16 +34,17 @@ void	process_obj(t_scene *scene, char *line)
 	material.texture_idx = -1;
 	material.displacement_tex_idx = -1;
 	material.roughness_tex_idx = -1;
+	material.normal_tex_idx = -1;
 	material.texture_tile_size = 1.0;
 	mesh_scale = 1.0f;
-	if (sscanf(line, "obj %s %f %f,%f,%f %f,%f,%f %f,%f,%f %f %f %f,%f,%f %s %s %s %f",
+	if (sscanf(line, "obj %s %f %f,%f,%f %f,%f,%f %f,%f,%f %f %f %f,%f,%f %s %s %s %s %f",
 				path, &mesh_scale,
 				&pos.x, &pos.y, &pos.z,
 				&dir.x, &dir.y, &dir.z,
 				&r, &g, &b,
 				&roughness, &metallic,
 				&er, &eg, &eb,
-				texture_idx, disp_idx, rough_idx, &material.texture_tile_size) < 11)
+				texture_idx, disp_idx, rough_idx, normal_idx, &material.texture_tile_size) < 11)
 	{
 		printf("Obj invalid format.\n");
 		return ;
@@ -54,6 +56,7 @@ void	process_obj(t_scene *scene, char *line)
 	material.texture_idx = get_texture_if_valid(scene, texture_idx);
 	material.displacement_tex_idx = get_texture_if_valid(scene, disp_idx);
 	material.roughness_tex_idx = get_texture_if_valid(scene, rough_idx);
+	material.normal_tex_idx = get_texture_if_valid(scene, normal_idx);
 	obj = load_mesh_from_obj(path, mesh_scale);
 	obj.position = pos;
 	obj.direction = dir;

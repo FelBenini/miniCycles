@@ -28,6 +28,8 @@ void	process_cube(t_scene *scene, char *line)
 	char		texture_idx[125] = "";
 	char		disp_idx[125] = "";
 	char		rough_idx[125] = "";
+	char		normal_idx[125] = "";
+	float		texture_tile_size;
 
 	roughness = 0.8f;
 	metallic = 0.0f;
@@ -35,15 +37,16 @@ void	process_cube(t_scene *scene, char *line)
 	material.texture_idx = -1;
 	material.displacement_tex_idx = -1;
 	material.roughness_tex_idx = -1;
-	material.texture_tile_size = 1.0;
-	matched = sscanf(line, "cb %f,%f,%f %f,%f,%f %f %f,%f,%f %f %f %f,%f,%f %s %s %s %f",
+	material.normal_tex_idx = -1;
+	texture_tile_size = 1.0;
+	matched = sscanf(line, "cb %f,%f,%f %f,%f,%f %f %f,%f,%f %f %f %f,%f,%f %s %s %s %s %f",
 		&px, &py, &pz,
 		&nx, &ny, &nz,
 		&diameter,
 		&r, &g, &b,
 		&roughness, &metallic,
 		&emission.x, &emission.y, &emission.z,
-		texture_idx, disp_idx, rough_idx, &material.texture_tile_size);
+		texture_idx, disp_idx, rough_idx, normal_idx, &texture_tile_size);
 	if (matched < 10)
 	{
 		printf("Error: invalid cube format .\n");
@@ -58,6 +61,8 @@ void	process_cube(t_scene *scene, char *line)
 	material.texture_idx = get_texture_if_valid(scene, texture_idx);
 	material.displacement_tex_idx = get_texture_if_valid(scene, disp_idx);
 	material.roughness_tex_idx = get_texture_if_valid(scene, rough_idx);
+	material.normal_tex_idx = get_texture_if_valid(scene, normal_idx);
+	material.texture_tile_size = texture_tile_size;
 	emission.x /= 255.0f;
 	emission.y /= 255.0f;
 	emission.z /= 255.0f;
