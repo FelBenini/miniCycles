@@ -12,6 +12,7 @@ uniform float u_cam_fov;
 
 uniform vec4  u_ambient_color;
 uniform int   u_sky_tex;
+uniform float u_sky_intensity;
 uniform uint  u_light_count;
 // Progressive sampling control
 uniform uint u_frame_index;   // increment every frame

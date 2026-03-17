@@ -61,6 +61,7 @@ typedef struct s_scene
 	t_tlas				tlas;
 	t_vec4				ambient;
 	int					sky_tex;
+	float				sky_intensity;
 	uint32_t			mesh_count;
 	uint32_t			mesh_capacity;
 	uint32_t			material_count;

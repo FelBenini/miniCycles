@@ -14,6 +14,7 @@ t_scene	scene_create(uint32_t initial_capacity)
 	scene.descriptors = malloc(sizeof(t_mesh_descriptor) * scene.mesh_capacity);
 	scene.materials = malloc(sizeof(t_material) * scene.material_capacity);
 	scene.sky_tex = -1;
+	scene.sky_intensity = 1;
 	scene.bvhs = malloc(sizeof(t_bvh) * scene.mesh_capacity);
 	scene.light_capacity = 0;
 	scene.light_count = 0;

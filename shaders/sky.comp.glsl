@@ -22,6 +22,6 @@ vec3 sky_color(s_ray ray)
         0.5 + atan(d.z, d.x) / (2.0 * 3.14159265358979),
         0.5 + asin(clamp(d.y, -1.0, 1.0)) / 3.14159265358979
     );
-
-    return sample_image(u_sky_tex, uv).rgb;
+	vec3 res = sample_image(u_sky_tex, uv).rgb;
+    return res * u_sky_intensity;
 }

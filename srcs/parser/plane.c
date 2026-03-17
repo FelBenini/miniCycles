@@ -19,25 +19,26 @@ void	process_plane(t_scene *scene, char *line)
 	char		texture_idx[125] = "";
 	char		disp_idx[125] = "";
 	char		rough_idx[125] = "";
+	char		norm_idx[125] = "";
 
 	roughness = 0.6f;
 	metallic = 0.0f;
 	emission = vec4_create(0, 0, 0, 1.0f);
-	sizex = 1000;
-	sizey = 1000;
+	sizex = 100000;
+	sizey = 100000;
 	material.texture_idx = -1;
 	material.displacement_tex_idx = -1;
 	material.roughness_tex_idx = -1;
 	material.normal_tex_idx = -1;
 	material.texture_tile_size = 1.0;
-	if (sscanf(line, "pl %f,%f,%f %f,%f,%f %f,%f,%f %f,%f %f %f %f,%f,%f %s %s %s %f",
+	if (sscanf(line, "pl %f,%f,%f %f,%f,%f %f,%f,%f %f,%f %f %f %f,%f,%f %s %s %s %s %f",
 		&px, &py, &pz,
 		&nx, &ny, &nz,
 		&r, &g, &b,
 		&sizex, &sizey,
 		&roughness, &metallic,
 		&emission.x, &emission.y, &emission.z,
-		texture_idx, disp_idx, rough_idx, &material.texture_tile_size) < 9)
+		texture_idx, disp_idx, rough_idx, norm_idx, &material.texture_tile_size) < 9)
 	{
 		printf("Error: invalid plane format.\n");
 		return ;
@@ -54,6 +55,7 @@ void	process_plane(t_scene *scene, char *line)
 	material.texture_idx = get_texture_if_valid(scene, texture_idx);
 	material.roughness_tex_idx = get_texture_if_valid(scene, rough_idx);
 	material.displacement_tex_idx = get_texture_if_valid(scene, disp_idx);
+	material.normal_tex_idx = get_texture_if_valid(scene, norm_idx);
 	material.emission  = emission;
 	material.ior       = 0;
 	material_idx = scene_add_material(scene, material);

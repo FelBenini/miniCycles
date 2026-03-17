@@ -1,18 +1,18 @@
 C  -30.0,2,0 0.5,0,0 70
-pl 1.0,0.0,0.0     0.0,0.0,0.0     0,0,0    1000,1000 0.0 1.0     0,0,0    assets/tiles.jpg      assets/tiles_disp.jpg    assets/tiles_rough.jpg     100.0
+pl 1.0,0.0,0.0     0.0,0.0,0.0     207,207,207    100000,100000 0.0 0.6     0,0,0    assets/wat.jpg      assets/wat.jpg    assets/wat.jpg     assets/Water_NORM.png  20000
 
 cb 0.0,0,-14.0   0.01,0.0,0.01  12.6         255,10,10   0.2 0.6   0,0,0 assets/rocks2.jpg    assets/rocks2_disp.jpg  assets/rocks2_rough.jpg rocks2_norm.jpg 5
-sp -47.0,0.0,3.0  3.6 10,10,10 0.025 0.0    0,0,0     assets/ground.jpg      assets/ground_disp.jpg     assets/ground_rough.jpg 3
+sp -47.0,0.0,3.0  3.6 10,10,10 0.025 0.0    0,0,0     assets/ground.jpg      assets/ground_disp.jpg     assets/ground_rough.jpg none 1
 sp -47.0,0.0,8.0  3.6 10,10,10 0.025 0.0    0,0,0     assets/marble.jpg      assets/marble_disp.jpg     assets/marble_rough.jpg
 sp -47.0,0.0,13.0  3.6 10,10,10 1.0 0.0    0,0,0     assets/bricks_Color.jpg      assets/bricks_Displacement.jpg     assets/bricks_Roughness.jpg  assets/bricks_Normal.jpg
+sp -47.0,0.0,18.0  3.6 255,10,10 0.5 0.0   0,0,0
+sp -47.0,0.0,24.0  3.6 255,10,10 0.5 0.0   0,0,0     assets/sand/albedo.jpg      assets/sand/displacement.jpg       assets/sand/roughness.jpg   assets/sand/normal.jpg
 
 sp  3,15.9,-15   1  255,255,255      0 0      2555,2555,2555
 
 obj assets/bunny.obj   1.0   0,12.6,-14     0,0,0      200,200,200
 obj assets/monkey.obj  1.0   3,1.0,0     1,0,0      200,200,200    0.6   0.0     0,0,0     assets/bark.jpg    assets/bark_disp.jpg     assets/bark_rough.jpg 2.0
-obj assets/apple.obj   5.0   5,0.0,0     1,0,0      200,200,200    0.2   0.0     0,0,0     assets/apple.jpg     assets/apple_norm.jpg
+obj assets/apple.obj   5.0   5,0.0,0     1,0,0      200,200,200    0.6   0.0     0,0,0     assets/apple.jpg     assets/apple_norm.jpg
 obj assets/bread.obj   8.0   7,0.0,0     1,0,0      200,200,200    0.5   0.0     0,0,0     assets/bread.jpg     assets/bread_norm.jpg  none    assets/bread_norm.jpg
 
-L 0.5 255,255,255 SUN 0.5,0.8,0.5
-
-A assets/citrus_orchard_road_puresky.jpg
+A 0.9 assets/day_sky2.png

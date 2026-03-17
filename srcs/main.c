@@ -1,4 +1,3 @@
-#include "bvh.h"
 #include "camera.h"
 #include "cycles.h"
 #include "input.h"
@@ -20,6 +19,7 @@ static void	render_frame(
 	GLint loc_reset_samples,
 	GLint loc_ambient_color,
 	GLint loc_sky_tex,
+	GLint loc_sky_intensity,
 	GLint loc_light_count,
 	GLint loc_accumulation_tex_fs,
 	t_scene scene,
@@ -35,6 +35,7 @@ static void	render_frame(
 	glUniform2f(loc_resolution, (float)WIDTH, (float)HEIGHT);
 	glUniform1ui(loc_mesh_count, scene.mesh_count);
 	glUniform1i(loc_sky_tex, scene.sky_tex);
+	glUniform1f(loc_sky_intensity, scene.sky_intensity);
 	glUniform1ui(loc_frame_index, frame_index);
 	glUniform1ui(loc_reset_samples, reset_samples);
 	glUniform1ui(loc_light_count, scene.light_count);
@@ -76,6 +77,7 @@ int	main(int argc, char *argv[])
 	GLint	loc_accumulation_tex_fs;
 	GLint	loc_ambient_color;
 	GLint	loc_sky_tex;
+	GLint	loc_sky_intensity;
 	GLint	loc_light_count;
 
 	uint32_t frame_index = 0;
@@ -110,6 +112,8 @@ int	main(int argc, char *argv[])
 				cycles.compute_program, "u_ambient_color");
 	loc_sky_tex = glGetUniformLocation(
 				cycles.compute_program, "u_sky_tex");
+	loc_sky_intensity = glGetUniformLocation(
+				cycles.compute_program, "u_sky_intensity");
 	loc_light_count = glGetUniformLocation(
 					cycles.compute_program, "u_light_count");
 	loc_accumulation_tex_fs = glGetUniformLocation(
@@ -147,6 +151,7 @@ int	main(int argc, char *argv[])
 			loc_reset_samples,
 			loc_ambient_color,
 			loc_sky_tex,
+			loc_sky_intensity,
 			loc_light_count,
 			loc_accumulation_tex_fs,
 			scene,

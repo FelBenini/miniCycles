@@ -62,6 +62,10 @@ void	process_line(t_scene *scene, char *line)
 		process_obj(scene, line);
 	if (strncmp(&line[i], "L", 1) == 0)
 		process_light(scene, line);
+	if (strncmp(&line[i], "co", 2) == 0)
+		process_cone(scene, line);
+	if (strncmp(&line[i], "cy", 2) == 0)
+		process_cylinder(scene, line);
 }
 
 t_scene	parse_scene(char *filename)
