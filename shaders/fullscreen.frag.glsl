@@ -48,7 +48,7 @@ vec3 agxSaturation(vec3 color, float factor) {
 }
 
 vec3 agxLookPunchy(vec3 color) {
-    color = agxSaturation(color, 1.35);
+    color = agxSaturation(color, 1.05);
     color = pow(max(color, 0.0), vec3(1.15));
     return color;
 }
@@ -100,10 +100,6 @@ void main()
 	{
 	    color = agx(color);
     	color = linearToSRGB(color); // Gamma encode for the monitor.
-	}
-	else if (u_tonemap == 2)
-	{
-		
 	}
 	else
 		color = pow(color, vec3(1.0 / 2.2));
