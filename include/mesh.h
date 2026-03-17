@@ -9,11 +9,27 @@ typedef struct s_mesh {
 	t_triangle	*triangles;
 	uint32_t	triangle_count;
 	t_vec4		position;
-	t_vec4      direction;
+	t_vec4		direction;
 	t_vec4		scale;
 	uint32_t	smooth;
 	uint32_t	material_index;
 }	t_mesh;
+
+typedef struct s_obj_counts
+{
+	int	vert_count;
+	int	norm_count;
+	int	uv_count;
+	int	triangle_count;
+	int	face_count;
+}	t_obj_counts;
+
+typedef struct s_obj_buffers
+{
+	t_vec4	*verts;
+	t_vec4	*norms;
+	t_vec4	*uvs;
+}	t_obj_buffers;
 
 t_mesh	generate_uv_sphere(int stacks, int slices, float radius);
 
