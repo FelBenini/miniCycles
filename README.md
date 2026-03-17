@@ -18,3 +18,12 @@ make
 - GLFW installed
 - GNU C Compiler
 - And that's all folks
+
+## Features
+
+### Tonemapping
+
+Currently the AGX tonemapping is done at the fragment shader, by simulating the look and feel of it. Actual LUT for color grading is on the plans.
+
+<img width="1958" height="769" alt="AGX_comparison" src="https://github.com/user-attachments/assets/370f61a8-69ed-4afc-856b-36e0fe50fb0d" />
+<img width="1332" height="1118" alt="New Project" src="https://github.com/user-attachments/assets/8f6a7fa4-1e13-4f0c-a0d0-ac4b873ad93d" />
