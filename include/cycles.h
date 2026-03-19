@@ -3,6 +3,7 @@
 
 #include "../glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <lut.h>
 
 # define TRIANGLE_VERTS 1
 # define TRIANGLE_NORMS 2
@@ -17,6 +18,7 @@
 
 # define NO_TONEMAP 0
 # define AGX_TONEMAP 1
+# define CUBE_LUT_TONEMAP 2
 
 typedef struct s_cycles
 {
@@ -26,9 +28,12 @@ typedef struct s_cycles
 	GLuint			tex;
 	GLuint			vao;
 	unsigned int	tonemap;
+	GLuint			lut_tex;
+	int				lut_size;
 }	t_cycles;
 
 t_cycles	init_cycles(void);
 void		parse_cycles_args(t_cycles *cycles, char **args, int argv);
+GLuint		gen_lut_tex(t_lut lut);
 
 #endif

@@ -1,12 +1,14 @@
 #include "camera.h"
 #include "cycles.h"
 #include "input.h"
+#include "lut.h"
 #include "parser.h"
 #include "rt_math.h"
 #include "scene.h"
 #include <GLFW/glfw3.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -23,6 +25,8 @@ static void	render_frame(
 	GLint loc_light_count,
 	GLint loc_accumulation_tex_fs,
 	GLint loc_tonemap_fs,
+	GLint loc_lut_tex_fs,
+	GLint loc_lut_size_fs,
 	t_scene scene,
 	uint32_t frame_index,
 	uint32_t reset_samples)
@@ -53,7 +57,10 @@ static void	render_frame(
 	glBindTexture(GL_TEXTURE_2D, cycles.tex);
 	glUniform1ui(loc_accumulation_tex_fs, 0);
 	glUniform1ui(loc_tonemap_fs, cycles.tonemap);
-
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_3D, cycles.lut_tex);
+	glUniform1i(loc_lut_tex_fs, 1);
+	glUniform1i(loc_lut_size_fs, cycles.lut_size);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -78,6 +85,8 @@ int	main(int argc, char *argv[])
 	GLint	loc_reset_samples;
 	GLint	loc_accumulation_tex_fs;
 	GLint	loc_tonemap_fs;
+	GLint	loc_lut_tex_fs;
+	GLint	loc_lut_size_fs;
 	GLint	loc_ambient_color;
 	GLint	loc_sky_tex;
 	GLint	loc_sky_intensity;
@@ -93,6 +102,7 @@ int	main(int argc, char *argv[])
 	}
 	cycles = init_cycles();
 	parse_cycles_args(&cycles, argv, argc);
+
 	scene = parse_scene(argv[1]);
 
 	scene_upload_images(&scene);
@@ -124,6 +134,10 @@ int	main(int argc, char *argv[])
 		cycles.fullscreen_program, "u_accumulation_tex");
 	loc_tonemap_fs = glGetUniformLocation(
 			cycles.fullscreen_program, "u_tonemap");
+	loc_lut_tex_fs = glGetUniformLocation(
+			cycles.fullscreen_program, "u_lut_tex");
+	loc_lut_size_fs = glGetUniformLocation(
+			cycles.fullscreen_program, "u_lut_size");
 	glfwShowWindow(cycles.win);
 	while (!glfwWindowShouldClose(cycles.win))
 	{
@@ -161,6 +175,8 @@ int	main(int argc, char *argv[])
 			loc_light_count,
 			loc_accumulation_tex_fs,
 			loc_tonemap_fs,
+			loc_lut_tex_fs,
+			loc_lut_size_fs,
 			scene,
 			frame_index,
 			reset_samples);

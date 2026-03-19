@@ -14,6 +14,9 @@ uniform uint u_frame_index;
 
 uniform uint u_tonemap;
 
+uniform sampler3D u_lut_tex;
+uniform int u_lut_size;
+
 const mat3 AGX_INSET = mat3(
     0.842479062253094,   0.0423282422610123, 0.0423756549057051,
     0.0784335999999992,  0.878468636469772,  0.0784336,
@@ -84,6 +87,16 @@ vec3 linearToSRGB(vec3 x) {
     );
 }
 
+vec3 applyLUT(vec3 color) {
+    if (u_lut_size == 0)
+        return color;
+    float scale = float(u_lut_size - 1) / float(u_lut_size);
+    float l_offset = 0.5 / float(u_lut_size);
+    color = max(color, vec3(0.0));
+    vec3 uvw = color * scale + l_offset;
+    return texture(u_lut_tex, uvw).rgb;
+}
+
 void main()
 {
     // Raw sum of all color samples accumulated so far at this pixel
@@ -95,14 +108,15 @@ void main()
     // The more frames accumulate, the more noise cancels out and the image converges.
     vec3 color = accum.rgb / frame;
 
-	// Tonemappings
-	if (u_tonemap == 1)
-	{
-	    color = agx(color);
-    	color = linearToSRGB(color); // Gamma encode for the monitor.
-	}
-	else
-		color = pow(color, vec3(1.0 / 2.2));
+    if (u_tonemap == 1)
+        color = linearToSRGB(agx(color));
+  	else if (u_tonemap == 2 && u_lut_size > 0)
+	  {
+		    color = linearToSRGB(color);
+	      color = applyLUT(color);
+  	}
+	  else
+    	  color = linearToSRGB(color);
 
     fragColor = vec4(color, 1.0);
 }

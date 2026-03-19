@@ -5,7 +5,7 @@ cb 0.0,0,-14.0   0.01,0.0,0.01  12.6         255,10,10   0.2 0.6   0,0,0 assets/
 sp -47.0,0.5,3.0  3.6 10,10,10 0.025 0.0    0,0,0     assets/ground.jpg      assets/ground_disp.jpg     assets/ground_rough.jpg none 1
 sp -47.0,0.5,8.0  3.6 10,10,10 0.025 0.0    0,0,0     assets/marble.jpg      assets/marble_disp.jpg     assets/marble_rough.jpg
 sp -47.0,0.5,13.0  3.6 10,10,10 1.0 0.0    0,0,0     assets/bricks_Color.jpg      assets/bricks_Displacement.jpg     assets/bricks_Roughness.jpg  assets/bricks_Normal.jpg
-sp -47.0,0.5,18.0  3.6 255,10,10 0.5 0.0   0,0,0
+sp -47.0,0.5,18.0  3.6 185,10,10 0.5 0.0   0,0,0
 sp -47.0,0.5,24.0  3.6 255,10,10 0.5 0.0   0,0,0     assets/sand/albedo.jpg      assets/sand/displacement.jpg       assets/sand/roughness.jpg   assets/sand/normal.jpg
 
 sp  3,15.9,-15   1  255,255,255      0 0      2555,2555,2555
@@ -15,5 +15,4 @@ obj assets/monkey.obj  1.0   3,1.0,0     1,0,0      200,200,200    0.6   0.0    
 obj assets/apple.obj   5.0   5,0.0,0     1,0,0      200,200,200    0.6   0.0     0,0,0     assets/apple.jpg     assets/apple_norm.jpg
 obj assets/bread.obj   8.0   7,0.0,0     1,0,0      200,200,200    0.5   0.0     0,0,0     assets/bread.jpg     assets/bread_norm.jpg  none    assets/bread_norm.jpg
 
-L 0.5 255,255,255 SUN 1.0,1.0,1.0
-A 0.3 assets/day_sky2.png
+A 0.9 assets/day_sky2.png
