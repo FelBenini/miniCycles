@@ -4,6 +4,6 @@ pl  0.000,0.000,0.000   0.000,0.000,0.000   205,205,205    1000,1000
 L 0.5 255,255,255 SUN 0.5,0.8,0.5
 
 
-obj assets/dragon.obj      2.0   -44,0.0,0.5     0.5,0,0      205,205,205   0.8 0.0    0,0,0      none    assets/dragon_norm.png    none assets/dragon_norm.png
+obj assets/dragon.obj      2.0   -44,0.0,0.5     0.5,0,0      205,155,0   0.1 0.0    0,0,0      none    assets/dragon_norm.png    none assets/dragon_norm.png
 
-A 0 0,0,0
+A 1 20,20,20
