@@ -10,13 +10,13 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-static GLuint	gen_tex(void)
+static GLuint	gen_tex(int width, int height)
 {
 	GLuint	tex;
 
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA,
 		GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -59,6 +59,21 @@ static GLuint	gen_vao(void)
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	return (vao);
+}
+
+void	resize_callback(GLFWwindow *win, int width, int height)
+{
+	t_cycles	*cycles;
+
+	cycles = glfwGetWindowUserPointer(win);
+	if (!cycles)
+		return ;
+	glDeleteTextures(1, &cycles->tex);
+	cycles->width = width;
+	cycles->height = height;
+	cycles->tex = gen_tex(width, height);
+	glViewport(0, 0, width, height);
+	cycles->dirty = 1;
 }
 
 void	parse_cycles_args(t_cycles *cycles, char **args, int argv)
@@ -117,6 +132,10 @@ t_cycles	init_cycles(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     cycles.win = glfwCreateWindow(WIDTH, HEIGHT, "miniCycles", NULL, NULL);
+	cycles.width = WIDTH;
+	cycles.height = HEIGHT;
+	cycles.dirty = 0;
+    glfwSetFramebufferSizeCallback(cycles.win, resize_callback);
     glfwMakeContextCurrent(cycles.win);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -136,7 +155,7 @@ t_cycles	init_cycles(void)
 														NULL);
 	cycles.fullscreen_program = shader_create_graphics("shaders/fullscreen.vert.glsl",
 			"shaders/fullscreen.frag.glsl");
-	cycles.tex = gen_tex();
+	cycles.tex = gen_tex(WIDTH, HEIGHT);
 	cycles.vao = gen_vao();
 	cycles.tonemap = NO_TONEMAP;
 	cycles.lut_tex = 0;

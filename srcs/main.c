@@ -1,15 +1,12 @@
 #include "camera.h"
 #include "cycles.h"
-#include "input.h"
-#include "parser.h"
 #include "rt_math.h"
 #include "scene.h"
 #include <GLFW/glfw3.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#define WIDTH 1920
-#define HEIGHT 1080
+#include "parser.h"
+#include "input.h"
 
 static void	render_frame(
 	t_cycles cycles,
@@ -35,7 +32,7 @@ static void	render_frame(
 
 	glBindImageTexture(0, cycles.tex, 0, GL_FALSE, 0,
 		GL_READ_WRITE, GL_RGBA32F);
-	glUniform2f(loc_resolution, (float)WIDTH, (float)HEIGHT);
+	glUniform2f(loc_resolution, (float)cycles.width, (float)cycles.height);
 	glUniform1ui(loc_mesh_count, scene.mesh_count);
 	glUniform1i(loc_sky_tex, scene.sky_tex);
 	glUniform1f(loc_sky_intensity, scene.sky_intensity);
@@ -44,7 +41,7 @@ static void	render_frame(
 	glUniform1ui(loc_light_count, scene.light_count);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-	glDispatchCompute((WIDTH + 7) / 8, (HEIGHT + 7) / 8, 1);
+	glDispatchCompute((cycles.width + 7) / 8, (cycles.height + 7) / 8, 1);
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -64,7 +61,7 @@ static void	render_frame(
 
 static void	register_callbacks(t_cycles cycles, t_camera *cam)
 {
-	glfwSetWindowUserPointer(cycles.win, cam);
+	(void)cam;
 	glfwSetCursorPosCallback(cycles.win, mouse_callback);
 	glfwSetScrollCallback(cycles.win, scroll_callback);
 	glfwSetMouseButtonCallback(cycles.win, mouse_button_callback);
@@ -110,6 +107,8 @@ int	main(int argc, char *argv[])
 	scene_rebuild_tlas(&scene);
 	scene_upload_tlas_nodes(&scene);
 	scene_upload_lights(&scene);
+	cycles.cam = &scene.camera;
+	glfwSetWindowUserPointer(cycles.win, &cycles);
 	register_callbacks(cycles, &scene.camera);
 	cam_u = get_cam_uniform_locations(cycles.compute_program);
 	loc_resolution = glGetUniformLocation(
@@ -141,7 +140,7 @@ int	main(int argc, char *argv[])
 	{
 		glfwPollEvents();
 		handle_input(cycles.win, &scene.camera);
-		if (scene.camera.dirty)
+		if (scene.camera.dirty || cycles.dirty)
 		{
 			frame_index = 0;
 			reset_samples = 1;
@@ -151,6 +150,7 @@ int	main(int argc, char *argv[])
 			reset_samples = 0;
 			scene.camera.dirty = 0;
 		}
+		cycles.dirty = 0;
 		if (scene.desc_dirty)
 			scene_upload_descriptors(&scene);
 		if (scene.material_dirty)

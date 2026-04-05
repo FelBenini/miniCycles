@@ -1,6 +1,5 @@
 #ifndef INPUT_H
 # define INPUT_H
-# include "cycles.h"
 # include "camera.h"
 
 void	mouse_callback(GLFWwindow *win, double x, double y);

@@ -6,11 +6,8 @@ in vec2 v_uv;
 // Final output color written to the framebuffer
 out vec4 fragColor;
 
-// Accumulation texture: holds the SUM of all light samples across every frame so far
+// Accumulation texture: holds the SUM of all light samples (RGB) and count (A)
 uniform sampler2D u_accumulation_tex;
-
-// How many frames have been rendered and added to the accumulation texture
-uniform uint u_frame_index;
 
 uniform uint u_tonemap;
 
@@ -103,18 +100,18 @@ void main()
     vec4 accum = texture(u_accumulation_tex, v_uv);
 
     // Clamp to 1.0 minimum to avoid division by zero on the first frame
-    float frame = max(float(u_frame_index), 1.0);
+    float sample_count = max(accum.a, 1.0);
     // Divide the accumulated sum by the frame count to get the running average.
     // The more frames accumulate, the more noise cancels out and the image converges.
-    vec3 color = accum.rgb / frame;
+    vec3 color = accum.rgb / sample_count;
 
     if (u_tonemap == 1)
         color = linearToSRGB(agx(color));
-  	else if (u_tonemap == 2 && u_lut_size > 0)
+	else if (u_tonemap == 2 && u_lut_size > 0)
 	  {
 		    color = linearToSRGB(color);
 	      color = applyLUT(color);
-  	}
+	}
 	  else
     	  color = linearToSRGB(color);
 

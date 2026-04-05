@@ -4,6 +4,7 @@
 #include "../glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <lut.h>
+#include <camera.h>
 
 # define TRIANGLE_VERTS 1
 # define TRIANGLE_NORMS 2
@@ -23,6 +24,7 @@
 typedef struct s_cycles
 {
 	GLFWwindow		*win;
+	t_camera		*cam;
 	GLuint			compute_program;
 	GLuint			fullscreen_program;
 	GLuint			tex;
@@ -30,10 +32,14 @@ typedef struct s_cycles
 	unsigned int	tonemap;
 	GLuint			lut_tex;
 	int				lut_size;
+	int				width;
+	int				height;
+	int				dirty;
 }	t_cycles;
 
 t_cycles	init_cycles(void);
 void		parse_cycles_args(t_cycles *cycles, char **args, int argv);
 GLuint		gen_lut_tex(t_lut lut);
+void		resize_callback(GLFWwindow *win, int width, int height);
 
 #endif

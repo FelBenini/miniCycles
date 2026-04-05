@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "cycles.h"
 #include <GLFW/glfw3.h>
 #include <math.h>
 
@@ -10,13 +11,15 @@ void	mouse_callback(GLFWwindow *win, double x, double y)
 {
 	static double	last_x;
 	static double	last_y;
+	t_cycles		*cycles;
 	t_camera		*cam;
 	double			now;
 	double			dt;
 	float			dx;
 	float			dy;
 
-	cam = glfwGetWindowUserPointer(win);
+	cycles = glfwGetWindowUserPointer(win);
+	cam = cycles->cam;
 	if (!g_mouse_look)
 	{
 		g_first_move = 1;
@@ -43,9 +46,11 @@ void	mouse_callback(GLFWwindow *win, double x, double y)
 
 void	scroll_callback(GLFWwindow *win, double xoffset, double yoffset)
 {
+	t_cycles	*cycles;
 	t_camera	*cam;
 
-	cam = glfwGetWindowUserPointer(win);
+	cycles = glfwGetWindowUserPointer(win);
+	cam = cycles->cam;
 	cam->dirty = 1;
 	(void)xoffset;
 	cam->fov -= (float)yoffset * 0.05f;

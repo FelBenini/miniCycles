@@ -70,8 +70,9 @@ void trace_textures(
 
 vec3 trace_path(s_ray ray, inout uint seed)
 {
-    vec3 throughput = vec3(1.0);
-    vec3 radiance   = vec3(0.0);
+    vec3 throughput    = vec3(1.0);
+    vec3 radiance      = vec3(0.0);
+    bool prev_used_nee = false;
     const int MAX_BOUNCES = 6;
 
     for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
@@ -86,32 +87,44 @@ vec3 trace_path(s_ray ray, inout uint seed)
         s_mesh_descriptor mesh = meshes[hit.mesh_index];
         s_material        mat  = materials[mesh.material];
 
-        vec3 N        = hit.normal;
-        vec3 albedo   = mat.albedo.rgb;
-        vec3 emission = mat.emission.rgb;
-        float rough   = mat.roughness;
-        vec3 direct;
+        vec3  N             = hit.normal;
+        vec3  albedo        = mat.albedo.rgb;
+        vec3  emission      = mat.emission.rgb;
+        float rough         = mat.roughness;
         float adaptive_bias = max(1e-4, hit.t * 1e-4);
 
         trace_textures(mat, N, hit, albedo, rough);
+        rough = clamp(rough, 0.001, 1.0);
 
-        radiance += throughput * emission;
+        bool is_specular = rough < 0.1;
+
+        if (!prev_used_nee || is_specular)
+            radiance += throughput * emission;
+
         if (length(emission) > 0.0)
-        {
-            direct = sample_lights(hit.pos, N, adaptive_bias);
-            direct += sample_emissive_meshes(hit.pos, N, adaptive_bias, seed);
-            radiance += throughput * albedo * direct;
             break;
+
+        if (!is_specular)
+        {
+            vec3 direct = sample_lights(hit.pos, N, adaptive_bias);
+            vec3 emissive_direct = sample_emissive_meshes(hit.pos, N, adaptive_bias, seed);
+
+            // Clamp emissive direct to kill firefly spikes before accumulating
+            emissive_direct = min(emissive_direct, vec3(10.0));
+            direct = min(direct + emissive_direct, vec3(10.0));
+
+            radiance += throughput * albedo * direct;
+            prev_used_nee = true;
+        }
+        else
+        {
+            prev_used_nee = false;
         }
 
-        direct = sample_lights(hit.pos, N, adaptive_bias);
-        direct += sample_emissive_meshes(hit.pos, N, adaptive_bias, seed);
-        radiance += throughput * albedo * direct;
-
-        rough = clamp(rough, 0.001, 1.0);
-        vec3  diffuse_dir = sample_hemisphere(N, seed);
-        vec3  R           = reflect(ray.dir, N);
-        vec3  glossy_dir  = normalize(R + rough * sample_hemisphere(N, seed));
+        // --- Next bounce ---
+        vec3 diffuse_dir = sample_hemisphere(N, seed);
+        vec3 R           = reflect(ray.dir, N);
+        vec3 glossy_dir  = normalize(R + rough * sample_hemisphere(N, seed));
 
         if (dot(glossy_dir, N) < 0.0)
             glossy_dir = diffuse_dir;
@@ -122,10 +135,12 @@ vec3 trace_path(s_ray ray, inout uint seed)
         ray.dir     = new_dir;
         ray.inv_dir = 1.0 / new_dir;
 
-        vec3 F0 = mix(vec3(0.04), albedo, mat.metallic);
-        vec3 diffuse_color  = albedo * (1.0 - mat.metallic);
-
+        vec3 F0            = mix(vec3(0.04), albedo, mat.metallic);
+        vec3 diffuse_color = albedo * (1.0 - mat.metallic);
         throughput *= F0 + diffuse_color;
+
+        // Clamp throughput to prevent energy explosion across bounces
+        throughput = min(throughput, vec3(1.0));
 
         if (max(throughput.r, max(throughput.g, throughput.b)) < 0.001)
             break;
@@ -177,8 +192,8 @@ void main()
         sample_count = 0.0;
     }
 
-    vec3 accum = (prev.rgb * sample_count + new_sample)
-               / (sample_count + 1.0);
+    prev.rgb += new_sample;
+    sample_count += 1.0;
 
-    imageStore(u_output, pixel, vec4(accum, 1.0));
+    imageStore(u_output, pixel, vec4(prev.rgb, sample_count));
 }
