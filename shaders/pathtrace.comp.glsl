@@ -91,6 +91,7 @@ vec3 trace_path(s_ray ray, inout uint seed)
         vec3  albedo        = mat.albedo.rgb;
         vec3  emission      = mat.emission.rgb;
         float rough         = mat.roughness;
+        float metallic      = mat.metallic;
         float adaptive_bias = max(1e-4, hit.t * 1e-4);
 
         trace_textures(mat, N, hit, albedo, rough);
@@ -126,11 +127,11 @@ vec3 trace_path(s_ray ray, inout uint seed)
         ray.inv_dir = 1.0 / new_dir;
 
         // --- Energy conservation
-        vec3 F0 = mix(vec3(0.04), albedo, mat.metallic);
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
         float cosTheta = max(dot(N, new_dir), 0.0);
         vec3 F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 
-        vec3 kd = (1.0 - F) * (1.0 - mat.metallic);
+        vec3 kd = (1.0 - F) * (1.0 - metallic);
 
         throughput *= (kd * albedo + F);
 

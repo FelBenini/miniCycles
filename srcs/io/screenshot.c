@@ -1,12 +1,9 @@
 #include "screenshot.h"
 #include "cycles.h"
-#include "rt_math.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <math.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -45,7 +42,6 @@ void save_screenshot(int width, int height, int *screenshot_index)
 	{
 		int flipped_y;
 		float r, g, b;
-		float srgb_r, srgb_g, srgb_b;
 
 		flipped_y = (height - 1 - (i / width));
 		r = pixels[flipped_y * width * 4 + (i % width) * 4];
@@ -56,13 +52,9 @@ void save_screenshot(int width, int height, int *screenshot_index)
 		g = clampf(g, 0.0f, 1.0f);
 		b = clampf(b, 0.0f, 1.0f);
 
-		srgb_r = (r <= 0.0031308f) ? (12.92f * r) : (1.055f * powf(r, 1.0f / 2.4f) - 0.055f);
-		srgb_g = (g <= 0.0031308f) ? (12.92f * g) : (1.055f * powf(g, 1.0f / 2.4f) - 0.055f);
-		srgb_b = (b <= 0.0031308f) ? (12.92f * b) : (1.055f * powf(b, 1.0f / 2.4f) - 0.055f);
-
-		output[i * 3] = (GLubyte)(srgb_r * 255.0f);
-		output[i * 3 + 1] = (GLubyte)(srgb_g * 255.0f);
-		output[i * 3 + 2] = (GLubyte)(srgb_b * 255.0f);
+		output[i * 3] = (GLubyte)(r * 255.0f);
+		output[i * 3 + 1] = (GLubyte)(g * 255.0f);
+		output[i * 3 + 2] = (GLubyte)(b * 255.0f);
 	}
 
 	mkdir("output", 0755);
@@ -78,14 +70,9 @@ void save_screenshot(int width, int height, int *screenshot_index)
 	}
 
 	if (stbi_write_png(filename, width, height, 3, output, width * 3))
-	{
 		printf("Screenshot saved to %s\n", filename);
-	}
 	else
-	{
 		fprintf(stderr, "Failed to write screenshot to %s\n", filename);
-	}
-
 	free(pixels);
 	free(output);
 }
