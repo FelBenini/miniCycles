@@ -9,8 +9,6 @@
 #include "input.h"
 #include "screenshot.h"
 
-static int screenshot_index = 0;
-
 static void	render_frame(
 	t_cycles cycles,
 	GLint loc_resolution,
@@ -143,7 +141,7 @@ int	main(int argc, char *argv[])
 		glfwPollEvents();
 		handle_input(cycles.win, &scene.camera);
 		if (glfwGetKey(cycles.win, GLFW_KEY_P) == GLFW_PRESS)
-			save_screenshot(cycles.width, cycles.height, &screenshot_index);
+			save_screenshot(cycles.width, cycles.height);
 		if (scene.camera.dirty || cycles.dirty)
 		{
 			frame_index = 0;

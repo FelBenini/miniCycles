@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void	save_screenshot(int width, int height, int *screenshot_index);
+void	save_screenshot(int width, int height);
 
 #endif

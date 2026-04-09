@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <glob.h>
+#include <libgen.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -11,19 +13,39 @@
 static float clampf(float x, float min_val, float max_val)
 {
 	if (x < min_val)
-		return min_val;
+		return (min_val);
 	if (x > max_val)
-		return max_val;
+		return (max_val);
 	return x;
 }
 
-void save_screenshot(int width, int height, int *screenshot_index)
+void save_screenshot(int width, int height)
 {
 	GLfloat *pixels;
 	GLubyte *output;
 	char filename[256];
 	int i;
-	FILE *f;
+	static int	screenshot_index = -1;
+
+	if (screenshot_index == -1)
+	{
+		mkdir("output", 0755);
+		screenshot_index = 0;
+		glob_t glob_result;
+		if (glob("output/*.png", 0, NULL, &glob_result) == 0)
+		{
+			for (size_t j = 0; j < glob_result.gl_pathc; j++)
+			{
+				int num;
+				if (sscanf(basename(glob_result.gl_pathv[j]), "%d.png", &num) == 1)
+				{
+					if (num >= screenshot_index)
+						screenshot_index = num + 1;
+				}
+			}
+			globfree(&glob_result);
+		}
+	}
 
 	pixels = (GLfloat *)malloc(width * height * 4 * sizeof(GLfloat));
 	if (!pixels)
@@ -58,17 +80,9 @@ void save_screenshot(int width, int height, int *screenshot_index)
 	}
 
 	mkdir("output", 0755);
-	snprintf(filename, sizeof(filename), "output/%d.png", *screenshot_index);
-	(*screenshot_index)++;
+	snprintf(filename, sizeof(filename), "output/%d.png", screenshot_index);
 
-	f = fopen(filename, "rb");
-	if (f)
-	{
-		fclose(f);
-		snprintf(filename, sizeof(filename), "output/%d.png", *screenshot_index);
-		(*screenshot_index)++;
-	}
-
+	screenshot_index++;
 	if (stbi_write_png(filename, width, height, 3, output, width * 3))
 		printf("Screenshot saved to %s\n", filename);
 	else
