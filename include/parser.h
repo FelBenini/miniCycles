@@ -1,9 +1,10 @@
 #ifndef PARSER_H
 # define PARSER_H
 
+#include "cycles.h"
 #include "scene.h"
 
-t_scene	parse_scene(char *filename);
+t_scene	parse_scene(char *filename, t_cycles *cycles);
 void	process_plane(t_scene *scene, char *line);
 void	process_sphere(t_scene *scene, char *line);
 void	process_camera(t_scene *scene, char *line);

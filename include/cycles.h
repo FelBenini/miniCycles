@@ -38,7 +38,6 @@ typedef struct s_cycles
 }	t_cycles;
 
 t_cycles	init_cycles(void);
-void		parse_cycles_args(t_cycles *cycles, char **args, int argv);
 GLuint		gen_lut_tex(t_lut lut);
 void		resize_callback(GLFWwindow *win, int width, int height);
 

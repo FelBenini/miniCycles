@@ -76,51 +76,6 @@ void	resize_callback(GLFWwindow *win, int width, int height)
 	cycles->dirty = 1;
 }
 
-void	parse_cycles_args(t_cycles *cycles, char **args, int argv)
-{
-	int		i;
-	t_lut	lut;
-	char	*lut_path;
-
-	i = 2;
-	lut.size = 0;
-	lut.data = 0;
-	lut_path = NULL;
-	while (i < argv)
-	{
-		if (strncmp(args[i], "--tonemap=", 10) == 0)
-		{
-			if (strncmp(args[i] + 10, "agx", 3) == 0)
-				cycles->tonemap = AGX_TONEMAP;
-			else if (strncmp(args[i] + 10, "cube", 4) == 0)
-				cycles->tonemap = CUBE_LUT_TONEMAP;
-		}
-		if (strncmp(args[i], "--lut=", 6) == 0)
-			lut_path = args[i] + 6;
-		i++;
-	}
-	if (lut_path)
-	{
-		lut = load_lut(lut_path);
-		if (lut.size == 0)
-			printf("Warning: Failed to load LUT, falling back to no tonemap\n");
-	}
-	if (cycles->tonemap == CUBE_LUT_TONEMAP)
-	{
-		if (lut.size > 0)
-		{
-			cycles->lut_tex = gen_lut_tex(lut);
-			cycles->lut_size = lut.size;
-		}
-		else
-		{
-			printf("Error: --tonemap=cube requires --lut=<file.cube>\n");
-			cycles->tonemap = NO_TONEMAP;
-		}
-	}
-	destroy_lut(&lut);
-}
-
 t_cycles	init_cycles(void)
 {
 	t_cycles cycles;

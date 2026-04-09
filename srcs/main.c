@@ -99,9 +99,8 @@ int	main(int argc, char *argv[])
 		return (1);
 	}
 	cycles = init_cycles();
-	parse_cycles_args(&cycles, argv, argc);
 
-	scene = parse_scene(argv[1]);
+	scene = parse_scene(argv[1], &cycles);
 
 	scene_upload_images(&scene);
 	scene_upload_triangles(&scene);

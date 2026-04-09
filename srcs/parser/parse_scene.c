@@ -1,3 +1,5 @@
+#include "cycles.h"
+#include "lut.h"
 #include "parser.h"
 #include "scene.h"
 #include <ctype.h>
@@ -39,7 +41,22 @@ static char	*read_line(FILE *file)
 	return (line);
 }
 
-void	process_line(t_scene *scene, char *line)
+void	process_lut(char *line, t_cycles *cycles)
+{
+	t_lut	lut;
+	char	lut_path[126] = "";
+
+	sscanf(line, "lut %125s", lut_path);
+	lut.size = 0;
+	lut.data = 0;
+	lut = load_lut(lut_path);
+	if (lut.size > 0)
+		cycles->tonemap = CUBE_LUT_TONEMAP;
+	cycles->lut_tex = gen_lut_tex(lut);
+	cycles->lut_size = lut.size;
+}
+
+void	process_line(t_scene *scene, char *line, t_cycles *cycles)
 {
 	size_t	i;
 
@@ -66,9 +83,11 @@ void	process_line(t_scene *scene, char *line)
 		process_cone(scene, line);
 	if (strncmp(&line[i], "cy", 2) == 0)
 		process_cylinder(scene, line);
+	if (strncmp(&line[i], "lut", 3) == 0)
+		process_lut(line, cycles);
 }
 
-t_scene	parse_scene(char *filename)
+t_scene	parse_scene(char *filename, t_cycles *cycles)
 {
 	t_scene	scene;
 	FILE	*file;
@@ -83,7 +102,7 @@ t_scene	parse_scene(char *filename)
 	}
 	while ((line = read_line(file)) != NULL)
 	{
-		process_line(&scene, line);
+		process_line(&scene, line, cycles);
 		free(line);
 	}
 	fclose(file);
