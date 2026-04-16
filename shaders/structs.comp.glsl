@@ -96,6 +96,7 @@ struct s_hit {
     vec3  geo_normal;
     uint  mesh_index;
     vec2  uv;
+    float tri_area;
 };
 
 struct s_image_meta {

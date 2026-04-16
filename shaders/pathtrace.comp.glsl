@@ -68,11 +68,24 @@ void trace_textures(
     }
 }
 
+float eval_bsdf_pdf(vec3 N, vec3 dir, vec3 R, float rough)
+{
+    float pdf_diffuse = max(dot(N, dir), 0.0) / 3.14159265;
+    float cos_a = max(dot(dir, R), 0.0);
+    float shininess = 2.0 / max(rough * rough, 1e-4) - 2.0;
+    float pdf_glossy = (shininess + 1.0) / (2.0 * 3.14159265) * pow(cos_a, shininess);
+    return max(mix(pdf_glossy, pdf_diffuse, rough), 1e-6);
+}
+
 vec3 trace_path(s_ray ray, inout uint seed)
 {
-    vec3 throughput    = vec3(1.0);
+    vec3 throughput     = vec3(1.0);
     vec3 radiance      = vec3(0.0);
     const int MAX_BOUNCES = 6;
+
+    bool   prev_specular = true;
+    float  prev_bsdf_pdf = 0.0;
+    vec3   prev_origin   = ray.origin;
 
     for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
     {
@@ -86,59 +99,87 @@ vec3 trace_path(s_ray ray, inout uint seed)
         s_mesh_descriptor mesh = meshes[hit.mesh_index];
         s_material        mat  = materials[mesh.material];
 
-        vec3  N             = hit.normal;
-        vec3  albedo        = mat.albedo.rgb;
-        vec3  emission      = mat.emission.rgb;
-        float rough         = mat.roughness;
-        float metallic      = mat.metallic;
-        float adaptive_bias = max(1e-4, hit.t * 1e-4);
+        vec3  N              = hit.normal;
+        vec3  albedo         = mat.albedo.rgb;
+        vec3  emission       = mat.emission.rgb;
+        float rough          = mat.roughness;
+        float metallic       = mat.metallic;
+        float adaptive_bias  = max(1e-4, hit.t * 1e-4);
 
         trace_textures(mat, N, hit, albedo, rough);
-        rough = clamp(rough, 0.001, 1.0);
-
-        radiance += throughput * emission;
 
         if (length(emission) > 0.0)
+        {
+            float mis_weight = 1.0;
+
+            if (!prev_specular && prev_bsdf_pdf > 0.0)
+            {
+                float dist2     = dot(hit.pos - prev_origin, hit.pos - prev_origin);
+                float LdotLN    = abs(dot(hit.geo_normal, -ray.dir));
+                float tri_count = float(meshes[hit.mesh_index].tri_count);
+                float nee_pdf   = (LdotLN > 0.0 && hit.tri_area > 0.0)
+                    ? (dist2) / (LdotLN * tri_count * hit.tri_area)
+                    : 0.0;
+
+                mis_weight = prev_bsdf_pdf / (prev_bsdf_pdf + nee_pdf);
+            }
+
+            radiance += throughput * emission * mis_weight;
             break;
+        }
 
-        // --- Always do NEE (no specular check)
         vec3 direct = sample_lights(hit.pos, N, adaptive_bias);
-        vec3 emissive_direct = sample_emissive_meshes(hit.pos, N, adaptive_bias, seed);
 
-        emissive_direct = min(emissive_direct, vec3(10.0));
-        direct = min(direct + emissive_direct, vec3(10.0));
+        vec3 emissive_direct;
+        float inv_pdf;
+        sample_emissive_meshes(hit.pos, N, adaptive_bias, seed, emissive_direct, inv_pdf);
+
+        vec3 R = reflect(ray.dir, N);
+
+        if (dot(emissive_direct, emissive_direct) > 1e-8 && inv_pdf > 0.0)
+        {
+            float cos_a = max(dot(emissive_direct, R), 0.0);
+            float pdf_diff = max(dot(N, emissive_direct), 0.0) / 3.14159265;
+            float shininess = 2.0 / max(rough * rough, 1e-4) - 2.0;
+            float pdf_glos = (shininess + 1.0) / (2.0 * 3.14159265) * pow(cos_a, shininess);
+            float bsdf_pdf_nee = max(mix(pdf_glos, pdf_diff, rough), 1e-6);
+
+            float nee_pdf = 1.0 / inv_pdf;
+            float w_nee = nee_pdf / (nee_pdf + bsdf_pdf_nee);
+            direct += emissive_direct * w_nee;
+        }
+
+        direct = min(direct, vec3(10.0));
 
         radiance += throughput * albedo * direct;
 
-        // --- Next bounce ---
         vec3 diffuse_dir = sample_hemisphere(N, seed);
-        vec3 R           = reflect(ray.dir, N);
-        vec3 glossy_dir  = normalize(R + rough * sample_hemisphere(N, seed));
+        vec3 R_reflect    = reflect(ray.dir, N);
+        vec3 glossy_dir   = normalize(R_reflect + rough * sample_hemisphere(N, seed));
 
         if (dot(glossy_dir, N) < 0.0)
             glossy_dir = diffuse_dir;
 
         vec3 new_dir = normalize(mix(glossy_dir, diffuse_dir, rough));
 
-        ray.origin  = hit.pos + N * adaptive_bias;
-        ray.dir     = new_dir;
-        ray.inv_dir = 1.0 / new_dir;
-
-        // --- Energy conservation
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         float cosTheta = max(dot(N, new_dir), 0.0);
         vec3 F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-
         vec3 kd = (1.0 - F) * (1.0 - metallic);
-
         throughput *= (kd * albedo + F);
-
         throughput = min(throughput, vec3(1.0));
 
         if (max(throughput.r, max(throughput.g, throughput.b)) < 0.001)
             break;
 
-        // Russian roulette
+        prev_bsdf_pdf = eval_bsdf_pdf(N, new_dir, R_reflect, rough);
+        prev_specular = (rough < 0.05);
+        prev_origin   = ray.origin;
+
+        ray.origin  = hit.pos + N * adaptive_bias;
+        ray.dir     = new_dir;
+        ray.inv_dir = 1.0 / new_dir;
+
         if (bounce >= 1)
         {
             float p = clamp(max(throughput.r, max(throughput.g, throughput.b)), 0.05, 0.95);

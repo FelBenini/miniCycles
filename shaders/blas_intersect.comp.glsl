@@ -29,6 +29,7 @@ void blas_intersect(s_ray ray, uint mesh_idx, inout s_hit hit)
                     vec3 geo_n = normalize(cross(e1, e2));
                     if (dot(geo_n, ray.dir) > 0.0) geo_n = -geo_n;
                     hit.geo_normal = geo_n;
+                    hit.tri_area = 0.5 * length(cross(e1, e2));
 
                     if (meshes[mesh_idx].smooth_shade == 1u)
                     {
