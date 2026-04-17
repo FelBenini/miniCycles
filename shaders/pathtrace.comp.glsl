@@ -68,18 +68,9 @@ void trace_textures(
     }
 }
 
-float eval_bsdf_pdf(vec3 N, vec3 dir, vec3 R, float rough)
-{
-    float pdf_diffuse = max(dot(N, dir), 0.0) / 3.14159265;
-    float cos_a = max(dot(dir, R), 0.0);
-    float shininess = 2.0 / max(rough * rough, 1e-4) - 2.0;
-    float pdf_glossy = (shininess + 1.0) / (2.0 * 3.14159265) * pow(cos_a, shininess);
-    return max(mix(pdf_glossy, pdf_diffuse, rough), 1e-6);
-}
-
 vec3 trace_path(s_ray ray, inout uint seed)
 {
-    vec3 throughput     = vec3(1.0);
+    vec3 throughput    = vec3(1.0);
     vec3 radiance      = vec3(0.0);
     const int MAX_BOUNCES = 6;
 
@@ -89,13 +80,16 @@ vec3 trace_path(s_ray ray, inout uint seed)
 
     for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
     {
+        // Intersect ray with scene
         s_hit hit;
         if (!scene_intersect(ray, hit))
         {
+            // No hit: accumulate environment lighting and exit
             radiance += throughput * sky_color(ray);
             break;
         }
 
+        // Fetch material and geometry data
         s_mesh_descriptor mesh = meshes[hit.mesh_index];
         s_material        mat  = materials[mesh.material];
 
@@ -104,82 +98,79 @@ vec3 trace_path(s_ray ray, inout uint seed)
         vec3  emission       = mat.emission.rgb;
         float rough          = mat.roughness;
         float metallic       = mat.metallic;
+
+        // Bias to avoid self-intersection (scaled by distance)
         float adaptive_bias  = max(1e-4, hit.t * 1e-4);
 
+        // Apply textures (may modify albedo, normal, roughness)
         trace_textures(mat, N, hit, albedo, rough);
 
+        // If we hit an emissive surface (light)
         if (length(emission) > 0.0)
         {
-            float mis_weight = 1.0;
+            // MIS weight between BSDF sampling and light sampling
+            float mis_weight = mis_emission_weight(prev_specular, prev_bsdf_pdf, prev_origin, hit);
 
-            if (!prev_specular && prev_bsdf_pdf > 0.0)
-            {
-                float dist2     = dot(hit.pos - prev_origin, hit.pos - prev_origin);
-                float LdotLN    = abs(dot(hit.geo_normal, -ray.dir));
-                float tri_count = float(meshes[hit.mesh_index].tri_count);
-                float nee_pdf   = (LdotLN > 0.0 && hit.tri_area > 0.0)
-                    ? (dist2) / (LdotLN * tri_count * hit.tri_area)
-                    : 0.0;
-
-                mis_weight = prev_bsdf_pdf / (prev_bsdf_pdf + nee_pdf);
-            }
-
+            // Accumulate emitted radiance and terminate path
             radiance += throughput * emission * mis_weight;
             break;
         }
 
+        // Direct lighting (Next Event Estimation)
         vec3 direct = sample_lights(hit.pos, N, adaptive_bias);
 
-        vec3 emissive_direct;
-        float inv_pdf;
-        sample_emissive_meshes(hit.pos, N, adaptive_bias, seed, emissive_direct, inv_pdf);
-
+        // Add emissive mesh sampling with MIS
         vec3 R = reflect(ray.dir, N);
+        direct += sample_emissive_mis(hit.pos, N, R, rough, adaptive_bias, seed);
 
-        if (dot(emissive_direct, emissive_direct) > 1e-8 && inv_pdf > 0.0)
-        {
-            float cos_a = max(dot(emissive_direct, R), 0.0);
-            float pdf_diff = max(dot(N, emissive_direct), 0.0) / 3.14159265;
-            float shininess = 2.0 / max(rough * rough, 1e-4) - 2.0;
-            float pdf_glos = (shininess + 1.0) / (2.0 * 3.14159265) * pow(cos_a, shininess);
-            float bsdf_pdf_nee = max(mix(pdf_glos, pdf_diff, rough), 1e-6);
-
-            float nee_pdf = 1.0 / inv_pdf;
-            float w_nee = nee_pdf / (nee_pdf + bsdf_pdf_nee);
-            direct += emissive_direct * w_nee;
-        }
-
-        direct = min(direct, vec3(10.0));
-
+        // Accumulate direct lighting contribution
         radiance += throughput * albedo * direct;
 
+        // Sample new direction: diffuse + glossy blend
         vec3 diffuse_dir = sample_hemisphere(N, seed);
-        vec3 R_reflect    = reflect(ray.dir, N);
-        vec3 glossy_dir   = normalize(R_reflect + rough * sample_hemisphere(N, seed));
+        vec3 R_reflect   = reflect(ray.dir, N);
+        vec3 glossy_dir  = normalize(R_reflect + rough * sample_hemisphere(N, seed));
 
+        // Ensure glossy direction is above surface
         if (dot(glossy_dir, N) < 0.0)
             glossy_dir = diffuse_dir;
 
+        // Interpolate between glossy and diffuse based on roughness
         vec3 new_dir = normalize(mix(glossy_dir, diffuse_dir, rough));
 
+        // Fresnel term (Schlick approximation)
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         float cosTheta = max(dot(N, new_dir), 0.0);
         vec3 F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+
+        // Diffuse weight (energy conservation)
         vec3 kd = (1.0 - F) * (1.0 - metallic);
+
+        // Update throughput (path contribution)
         throughput *= (kd * albedo + F);
+
+        // Clamp to avoid fireflies
         throughput = min(throughput, vec3(1.0));
 
+        // Early termination if contribution is too small
         if (max(throughput.r, max(throughput.g, throughput.b)) < 0.001)
             break;
 
+        // Store BSDF PDF for MIS with next hit
         prev_bsdf_pdf = eval_bsdf_pdf(N, new_dir, R_reflect, rough);
+
+        // Track whether previous bounce was specular
         prev_specular = (rough < 0.05);
+
+        // Store previous ray origin (for MIS)
         prev_origin   = ray.origin;
 
+        // Spawn next ray (offset to avoid self-hit)
         ray.origin  = hit.pos + N * adaptive_bias;
         ray.dir     = new_dir;
         ray.inv_dir = 1.0 / new_dir;
 
+        // Russian roulette termination after first bounce
         if (bounce >= 1)
         {
             float p = clamp(max(throughput.r, max(throughput.g, throughput.b)), 0.05, 0.95);

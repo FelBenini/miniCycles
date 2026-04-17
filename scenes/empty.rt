@@ -10,7 +10,7 @@ sp -47.0,0.5,24.0  3.6 255,10,10 0.5 0.0   0,0,0     assets/textures/sand/albedo
 
 sp  3,15.9,-15   1  255,255,255      0 0      2555,2555,2555
 
-obj assets/objs/bunny.obj   1.0   0,12.6,-14     0,0,0      200,200,200
+obj assets/objs/bunny.obj   1.0   0,12.9,-14     0,0,0      200,200,200
 obj assets/objs/monkey.obj  1.0   3,1.0,0     1,0,0      200,200,200    0.6   0.0     0,0,0
 obj assets/objs/apple/apple.obj   5.0   5,0.0,0     1,0,0      200,200,200    0.6   0.0     0,0,0     assets/objs/apple/apple.jpg     assets/objs/apple/apple_norm.jpg
 obj assets/objs/bread/bread.obj   8.0   7,0.0,0     1,0,0      200,200,200    0.5   0.0     0,0,0     assets/objs/bread/bread.jpg     assets/objs/bread/bread_norm.jpg  none    assets/objs/bread/bread_norm.jpg

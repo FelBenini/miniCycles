@@ -128,6 +128,7 @@ t_cycles	init_cycles(void)
 														"shaders/seed.comp.glsl",
 														"shaders/sky.comp.glsl",
 														"shaders/sample_light.comp.glsl",
+														"shaders/mis.comp.glsl",
 														"shaders/pathtrace.comp.glsl",
 														NULL);
 	cycles.fullscreen_program = shader_create_graphics("shaders/fullscreen.vert.glsl",
