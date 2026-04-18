@@ -72,7 +72,7 @@ vec3 trace_path(s_ray ray, inout uint seed)
 {
     vec3 throughput    = vec3(1.0);
     vec3 radiance      = vec3(0.0);
-    const int MAX_BOUNCES = 6;
+    const int MAX_BOUNCES = u_max_bounces;
 
     bool   prev_specular = true;
     float  prev_bsdf_pdf = 0.0;

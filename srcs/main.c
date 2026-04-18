@@ -20,6 +20,7 @@ static void	render_frame(
 	GLint loc_sky_intensity,
 	GLint loc_light_count,
 	GLint loc_emissive_mesh_count,
+	GLint loc_max_bounces,
 	GLint loc_accumulation_tex_fs,
 	GLint loc_tonemap_fs,
 	GLint loc_lut_tex_fs,
@@ -51,6 +52,7 @@ static void	render_frame(
 	glUniform1ui(loc_reset_samples, reset_samples);
 	glUniform1ui(loc_light_count, scene.light_count);
 	glUniform1ui(loc_emissive_mesh_count, scene.emissive_mesh_count);
+	glUniform1i(loc_max_bounces, preview ? 3 : 6);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glDispatchCompute((render_width + 7) / 8, (render_height + 7) / 8, 1);
@@ -100,6 +102,7 @@ int	main(int argc, char *argv[])
 	GLint	loc_sky_intensity;
 	GLint	loc_light_count;
 	GLint	loc_emissive_mesh_count;
+	GLint	loc_max_bounces;
 
 	uint32_t frame_index = 0;
 	uint32_t preview_frame_index = 0;
@@ -145,6 +148,8 @@ int	main(int argc, char *argv[])
 					cycles.compute_program, "u_light_count");
 	loc_emissive_mesh_count = glGetUniformLocation(
 					cycles.compute_program, "u_emissive_mesh_count");
+	loc_max_bounces = glGetUniformLocation(
+					cycles.compute_program, "u_max_bounces");
 	loc_accumulation_tex_fs = glGetUniformLocation(
 		cycles.fullscreen_program, "u_accumulation_tex");
 	loc_tonemap_fs = glGetUniformLocation(
@@ -211,6 +216,7 @@ int	main(int argc, char *argv[])
 			loc_sky_intensity,
 			loc_light_count,
 			loc_emissive_mesh_count,
+			loc_max_bounces,
 			loc_accumulation_tex_fs,
 			loc_tonemap_fs,
 			loc_lut_tex_fs,

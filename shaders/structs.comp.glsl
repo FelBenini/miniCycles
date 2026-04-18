@@ -18,6 +18,7 @@ uniform uint  u_emissive_mesh_count;
 // Progressive sampling control
 uniform uint u_frame_index;   // increment every frame
 uniform uint u_reset_samples; // set to 1 when camera moves
+uniform int  u_max_bounces;
 
 // Structs
 
