@@ -185,8 +185,7 @@ int	main(int argc, char *argv[])
 		{
 			if (cycles.preview)
 				preview_frame_index = 0;
-			else
-				frame_index = 0;
+			frame_index = 0;
 			reset_samples = 1;
 		}
 		else
