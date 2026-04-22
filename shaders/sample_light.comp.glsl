@@ -153,12 +153,17 @@ void sample_emissive_meshes(vec3 pos, vec3 normal, float bias, inout uint seed, 
         if (NdotL <= 0.0 || LdotLN <= 0.0)
             continue;
 
+        // Cast shadow ray from light point surface to avoid self-intersection
+        vec3 shadow_origin = light_pos + light_n * max(bias, 1e-4);
+        vec3 to_shading = origin - shadow_origin;
+        
         s_ray shadow_ray;
-        shadow_ray.origin  = origin;
-        shadow_ray.dir     = L;
-        shadow_ray.inv_dir = 1.0 / L;
+        shadow_ray.origin  = shadow_origin;
+        shadow_ray.dir     = normalize(to_shading);
+        shadow_ray.inv_dir = 1.0 / shadow_ray.dir;
 
-        if (scene_intersect_shadow(shadow_ray, dist * 0.9999))
+        // Exclude the sampled mesh from shadow test to prevent self-shadowing
+        if (scene_intersect_shadow_exclude(shadow_ray, dist * 0.9999, mesh_idx))
             continue;
 
         float inv_pdf = (float(tri_count) * tri_area * LdotLN) / dist2;

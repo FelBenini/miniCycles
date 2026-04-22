@@ -95,6 +95,7 @@ t_scene	parse_scene(char *filename, t_cycles *cycles)
 
 	scene = scene_create(8);
 	file = fopen(filename, "r");
+	printf("Parsing scene\n");
 	if (!file)
 	{
 		printf("Could not open the file '%s'.\n", filename);
@@ -105,6 +106,7 @@ t_scene	parse_scene(char *filename, t_cycles *cycles)
 		process_line(&scene, line, cycles);
 		free(line);
 	}
+	printf("Scene parsed successfully\n");
 	fclose(file);
 	return (scene);
 }

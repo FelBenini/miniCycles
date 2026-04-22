@@ -255,7 +255,6 @@ t_mesh	load_mesh_from_obj(const char *filepath, float radius)
 		mesh.triangles = NULL;
 		return (mesh);
 	}
-
 	scan_obj_counts(&counts, file);
 
 	if (!allocate_mesh_buffers(&mesh, &tmp, counts, radius))
@@ -264,5 +263,6 @@ t_mesh	load_mesh_from_obj(const char *filepath, float radius)
 	rewind(file);
 	fill_mesh_buffers(file, &mesh, &tmp, counts, radius);
 	free_temp_buffers(file, &tmp);
+	printf("Obj loaded: %s\n", filepath);
 	return (mesh);
 }

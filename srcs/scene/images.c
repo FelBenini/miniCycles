@@ -52,6 +52,7 @@ int	scene_load_image(t_scene *scene, const char *path)
 		s_pixel_cache = new_cache;
 		s_cache_cap = new_cap;
 	}
+	printf("Image loaded: %s\n", path);
 	s_pixel_cache[s_cache_count] = pixels;
 	s_cache_count++;
 	index = iss->count;

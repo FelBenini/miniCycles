@@ -76,7 +76,15 @@ bool scene_intersect(s_ray ray_world, out s_hit hit)
     return found;
 }
 
+// Forward declaration
+bool scene_intersect_shadow_exclude(s_ray ray_world, float max_t, uint exclude_mesh);
+
 bool scene_intersect_shadow(s_ray ray_world, float max_t)
+{
+    return scene_intersect_shadow_exclude(ray_world, max_t, ~0u);
+}
+
+bool scene_intersect_shadow_exclude(s_ray ray_world, float max_t, uint exclude_mesh)
 {
     uint stack[32];
     uint ptr = 0;
@@ -95,6 +103,11 @@ bool scene_intersect_shadow(s_ray ray_world, float max_t)
         if (node.left_child == 0 && node.right_child == 0)
         {
             uint mesh_idx = node.mesh_index;
+            
+            // Skip excluded mesh
+            if (mesh_idx == exclude_mesh)
+                continue;
+            
             mat3 R_inv    = transpose(mat_from_dir(meshes[mesh_idx].direction.xyz));
 
             s_ray ray;
