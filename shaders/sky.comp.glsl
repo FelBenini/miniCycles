@@ -5,10 +5,10 @@ vec4 sample_image(uint img_idx, vec2 uv) {
     uint offset = meta.pixel_offset + y * meta.width + x;
     uint texel  = pixels[offset];
     return vec4(
-        float((texel      ) & 0xFF) / 255.0,
-        float((texel >>  8) & 0xFF) / 255.0,
-        float((texel >> 16) & 0xFF) / 255.0,
-        float((texel >> 24) & 0xFF) / 255.0
+        float((texel      ) & 0xFFu) / 255.0,
+        float((texel >>  8) & 0xFFu) / 255.0,
+        float((texel >> 16) & 0xFFu) / 255.0,
+        float((texel >> 24) & 0xFFu) / 255.0
     );
 }
 

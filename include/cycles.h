@@ -17,6 +17,12 @@
 # define IMAGES_SSBOS 9
 # define PIXELS_SSBOS 10
 # define EMISSIVE_MESHES_SSBOS 11
+# define RAY_QUEUE_SSBO_A 12
+# define RAY_QUEUE_SSBO_B 13
+# define RAY_COUNTERS_SSBO 14
+
+# define MAX_TILE_PIXELS (128 * 128)
+# define STATE_SIZE_BYTES 128
 
 # define NO_TONEMAP 0
 # define CUBE_LUT_TONEMAP 1
@@ -39,6 +45,8 @@ typedef struct s_cycles
 	int				preview_height;
 	int				dirty;
 	int				preview;
+	GLuint			ray_queue_ssbo[2];
+	GLuint			counters_ssbo;
 }	t_cycles;
 
 typedef struct s_compute_uniforms
@@ -54,6 +62,7 @@ typedef struct s_compute_uniforms
 	GLint	loc_light_count;
 	GLint	loc_emissive_mesh_count;
 	GLint	loc_max_bounces;
+	GLint	loc_pass_type;
 }	t_compute_uniforms;
 
 typedef struct s_fragment_uniforms

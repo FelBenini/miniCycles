@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 320
+#define HEIGHT 180
 
 static GLuint	gen_tex(int width, int height)
 {
@@ -112,6 +112,7 @@ t_all_uniforms	get_all_uniform_locations(GLuint compute_program, GLuint fullscre
 	u.compute.loc_light_count = glGetUniformLocation(compute_program, "u_light_count");
 	u.compute.loc_emissive_mesh_count = glGetUniformLocation(compute_program, "u_emissive_mesh_count");
 	u.compute.loc_max_bounces = glGetUniformLocation(compute_program, "u_max_bounces");
+	u.compute.loc_pass_type = glGetUniformLocation(compute_program, "u_pass_type");
 	u.fragment.loc_accumulation_tex_fs = glGetUniformLocation(fullscreen_program, "u_accumulation_tex");
 	u.fragment.loc_tonemap_fs = glGetUniformLocation(fullscreen_program, "u_tonemap");
 	u.fragment.loc_lut_tex_fs = glGetUniformLocation(fullscreen_program, "u_lut_tex");
@@ -151,6 +152,7 @@ t_cycles	init_cycles(void)
 														"shaders/sky.comp.glsl",
 														"shaders/sample_light.comp.glsl",
 														"shaders/mis.comp.glsl",
+														"shaders/trace_textures.comp.glsl",
 														"shaders/shade_hit.comp.glsl",
 														"shaders/pathtrace.comp.glsl",
 														NULL);
@@ -161,6 +163,18 @@ t_cycles	init_cycles(void)
 	cycles.preview_width = WIDTH / 4;
 	cycles.preview_height = HEIGHT / 4;
 	cycles.vao = gen_vao();
+
+	int queue_size = MAX_TILE_PIXELS * STATE_SIZE_BYTES;
+	glGenBuffers(2, cycles.ray_queue_ssbo);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.ray_queue_ssbo[0]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, queue_size, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.ray_queue_ssbo[1]);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, queue_size, NULL, GL_DYNAMIC_DRAW);
+	glGenBuffers(1, &cycles.counters_ssbo);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.counters_ssbo);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
 	cycles.tonemap = NO_TONEMAP;
 	cycles.lut_tex = 0;
 	cycles.lut_size = 0;

@@ -108,6 +108,21 @@ struct s_image_meta {
     uint pixel_offset;
 };
 
+struct s_path_state {
+    vec3  origin;
+    vec3  dir;
+    vec3  inv_dir;
+    vec3  throughput;
+    vec3  radiance;
+    float prev_bsdf_pdf;
+    vec3  prev_origin;
+    uint  prev_specular;
+    uint  pixel_idx;
+    int   bounce;
+    uint  seed;
+    uint  alive;
+};
+
 struct s_shade_result {
     vec3  direct_radiance;
     vec3  new_throughput;
@@ -115,6 +130,9 @@ struct s_shade_result {
     float new_bsdf_pdf;
     bool  is_specular;
     bool  terminate;
+    float alpha;
+    vec3  N;
+    float rough;
 };
 
 #define LIGHT_SUN   0u
@@ -159,3 +177,15 @@ layout(std430, binding = 10) readonly buffer ImagePixels {
 layout(std430, binding = 11) readonly buffer EmissiveMeshIndices {
     uint emissive_mesh_indices[];
 };
+layout(std430, binding = 12) buffer RayQueue {
+    s_path_state ray_queue[];
+};
+layout(std430, binding = 13) buffer NextRayQueue {
+    s_path_state next_ray_queue[];
+};
+layout(std430, binding = 14) buffer RayCounters {
+    uint active_count;
+    uint cnt_pad[3];
+};
+
+uniform uint u_pass_type;

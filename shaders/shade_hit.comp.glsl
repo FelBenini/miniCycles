@@ -21,9 +21,6 @@ vec3 sample_hemisphere(vec3 N, inout uint seed)
 s_shade_result shade_hit(
     s_ray   ray,
     s_hit   hit,
-    vec3    N,
-    vec3    albedo,
-    float   rough,
     vec3    throughput,
     bool    prev_specular,
     float   prev_bsdf_pdf,
@@ -39,11 +36,21 @@ s_shade_result shade_hit(
     s_material        mat  = materials[mesh.material];
     float adaptive_bias    = max(1e-4, hit.t * 1e-4);
 
+    vec3  N      = hit.normal;
+    vec3  albedo = mat.albedo.rgb;
+    float alpha  = 1.0;
+    float rough  = mat.roughness;
+    trace_textures(mat, N, hit, albedo, alpha, rough);
+
+    res.alpha = alpha;
+    res.N     = N;
+    res.rough = rough;
+
     vec3 emission = mat.emission.rgb;
     float metallic = mat.metallic;
 
     if (length(emission) > 0.0)
-	{
+    {
         float mis_weight = mis_emission_weight(prev_specular, prev_bsdf_pdf, prev_origin, hit);
         res.direct_radiance = throughput * emission * mis_weight;
         res.terminate = true;
