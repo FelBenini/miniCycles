@@ -22,8 +22,6 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 {
 	t_cycles			cycles;
 	t_scene				scene;
-	t_cam_uniforms		cam_u;
-	t_all_uniforms		all_u;
 	char				title[126];
 
 	uint32_t frame_index = 0;
@@ -51,8 +49,6 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 	cycles.cam = &scene.camera;
 	glfwSetWindowUserPointer(cycles.win, &cycles);
 	register_callbacks(cycles, &scene.camera);
-	cam_u = get_cam_uniform_locations(cycles.compute_program);
-	all_u = get_all_uniform_locations(cycles.compute_program, cycles.fullscreen_program);
 	glfwShowWindow(cycles.win);
 	while (!glfwWindowShouldClose(cycles.win))
 	{
@@ -84,12 +80,10 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 		}
 		else
 			reset_samples = 0;
-		upload_camera(cycles.compute_program, cam_u, &scene.camera);
+		upload_camera(cycles.gen_ray_prog, cycles.cam_u, &scene.camera);
 		was_preview = cycles.preview;
 		render_frame(
 			cycles,
-			all_u.compute,
-			all_u.fragment,
 			scene,
 			cycles.preview ? preview_frame_index : frame_index,
 			reset_samples,

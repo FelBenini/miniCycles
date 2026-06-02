@@ -7,8 +7,6 @@
 
 void	render_frame(
 			t_cycles cycles,
-			t_compute_uniforms compute_u,
-			t_fragment_uniforms fragment_u,
 			t_scene scene,
 			uint32_t frame_index,
 			uint32_t reset_samples,

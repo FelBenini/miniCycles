@@ -1,4 +1,3 @@
-layout (local_size_x = 8, local_size_y = 8) in;
 layout (binding = 0, rgba32f) uniform image2D u_output;
 
 // Camera
@@ -14,8 +13,9 @@ uniform float u_cam_fov;
 uniform vec4  u_ambient_color;
 uniform int   u_sky_tex;
 uniform float u_sky_intensity;
-uniform uint  u_light_count;
-uniform uint  u_emissive_mesh_count;
+uniform uint u_mesh_count;
+uniform uint u_light_count;
+uniform uint u_emissive_mesh_count;
 // Progressive sampling control
 uniform uint u_frame_index;   // increment every frame
 uniform uint u_reset_samples; // set to 1 when camera moves
@@ -174,18 +174,34 @@ layout(std430, binding = 9) readonly buffer ImageMeta {
 layout(std430, binding = 10) readonly buffer ImagePixels {
     uint pixels[];
 };
-layout(std430, binding = 11) readonly buffer EmissiveMeshIndices {
-    uint emissive_mesh_indices[];
-};
-layout(std430, binding = 12) buffer RayQueue {
+layout(std430, binding = 11) buffer RayQueue {
     s_path_state ray_queue[];
 };
-layout(std430, binding = 13) buffer NextRayQueue {
+layout(std430, binding = 12) buffer NextRayQueue {
     s_path_state next_ray_queue[];
 };
-layout(std430, binding = 14) buffer RayCounters {
+layout(std430, binding = 13) buffer Counters {
     uint active_count;
-    uint cnt_pad[3];
+    uint shadow_count;
+    uint cnt_pad[2];
+};
+layout(std430, binding = 14) buffer HitQueue {
+    s_hit hit_queue[];
 };
 
-uniform uint u_pass_type;
+struct s_shadow_ray {
+    vec3  origin;
+    vec3  dir;
+    vec3  inv_dir;
+    float max_t;
+    vec3  contrib;
+    uint  pixel_idx;
+    uint  exclude_mesh;
+};
+
+layout(std430, binding = 15) buffer ShadowQueue {
+    s_shadow_ray shadow_queue[];
+};
+layout(std430, binding = 16) buffer ShadowAccum {
+    uint shadow_accum[];
+};

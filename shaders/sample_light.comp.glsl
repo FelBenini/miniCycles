@@ -1,6 +1,19 @@
-vec3 sample_lights(vec3 pos, vec3 normal, float bias)
+void emit_shadow_ray(vec3 origin, vec3 dir, float max_t, vec3 contrib,
+                     uint pixel_idx, uint exclude_mesh)
 {
-    vec3 result = vec3(0.0);
+    uint slot = atomicAdd(shadow_count, 1u);
+    shadow_queue[slot].origin       = origin;
+    shadow_queue[slot].dir          = dir;
+    shadow_queue[slot].inv_dir      = 1.0 / dir;
+    shadow_queue[slot].max_t        = max_t;
+    shadow_queue[slot].contrib      = contrib;
+    shadow_queue[slot].pixel_idx    = pixel_idx;
+    shadow_queue[slot].exclude_mesh = exclude_mesh;
+}
+
+vec3 sample_lights(vec3 pos, vec3 normal, float bias,
+                   uint pixel_idx, vec3 throughput_albedo)
+{
     for (uint i = 0u; i < u_light_count; i++)
     {
         s_light light = lights[i];
@@ -10,18 +23,10 @@ vec3 sample_lights(vec3 pos, vec3 normal, float bias)
             vec3 L = normalize(light.direction.xyz);
             float NdotL = max(dot(normal, L), 0.0);
             if (NdotL <= 0.0)
-				continue;
-
-            s_ray shadow_ray;
-            shadow_ray.origin  = pos + normal * bias;
-            shadow_ray.dir     = L;
-            shadow_ray.inv_dir = 1.0 / L;
-
-            s_hit shadow_hit;
-            if (scene_intersect(shadow_ray, shadow_hit))
                 continue;
 
-            result += light.color.xyz * light.intensity * NdotL;
+            vec3 contrib = throughput_albedo * light.color.xyz * light.intensity * NdotL;
+            emit_shadow_ray(pos + normal * bias, L, 1e30, contrib, pixel_idx, ~0u);
         }
         else if (light.type == LIGHT_POINT)
         {
@@ -30,20 +35,11 @@ vec3 sample_lights(vec3 pos, vec3 normal, float bias)
             vec3  L           = to_light / dist;
             float NdotL       = max(dot(normal, L), 0.0);
             if (NdotL <= 0.0)
-				continue;
-
-            float attenuation = 1.0 / (dist * dist);
-
-            s_ray shadow_ray;
-            shadow_ray.origin  = pos + normal * bias;
-            shadow_ray.dir     = L;
-            shadow_ray.inv_dir = 1.0 / L;
-
-            s_hit shadow_hit;
-            if (scene_intersect(shadow_ray, shadow_hit) && shadow_hit.t < dist)
                 continue;
 
-            result += light.color.xyz * light.intensity * NdotL * attenuation;
+            float attenuation = 1.0 / (dist * dist);
+            vec3 contrib = throughput_albedo * light.color.xyz * light.intensity * NdotL * attenuation;
+            emit_shadow_ray(pos + normal * bias, L, dist, contrib, pixel_idx, ~0u);
         }
         else if (light.type == LIGHT_SPOT)
         {
@@ -52,51 +48,36 @@ vec3 sample_lights(vec3 pos, vec3 normal, float bias)
             vec3  L           = to_light / dist;
             float NdotL       = max(dot(normal, L), 0.0);
             if (NdotL <= 0.0)
-				continue;
+                continue;
 
             vec3  spot_dir    = normalize(-light.direction.xyz);
             float cos_theta   = dot(L, spot_dir);
-
             float cos_inner   = light.cos_inner;
             float cos_outer   = light.cos_outer;
 
             if (cos_theta < cos_outer)
-				continue;
+                continue;
 
             float spot_factor = clamp(
                 (cos_theta - cos_outer) / (cos_inner - cos_outer),
-                0.0, 1.0
-            );
+                0.0, 1.0);
             spot_factor = spot_factor * spot_factor;
 
             float attenuation = 1.0 / (dist * dist);
-
-            s_ray shadow_ray;
-            shadow_ray.origin  = pos + normal * bias;
-            shadow_ray.dir     = L;
-            shadow_ray.inv_dir = 1.0 / L;
-
-            s_hit shadow_hit;
-            if (scene_intersect(shadow_ray, shadow_hit) && shadow_hit.t < dist)
-                continue;
-
-            result += light.color.xyz * light.intensity * NdotL * attenuation * spot_factor;
+            vec3 contrib = throughput_albedo * light.color.xyz * light.intensity * NdotL * attenuation * spot_factor;
+            emit_shadow_ray(pos + normal * bias, L, dist, contrib, pixel_idx, ~0u);
         }
     }
-    return result;
+    return vec3(0.0);
 }
 
-void sample_emissive_meshes(vec3 pos, vec3 normal, float bias, inout uint seed, out vec3 result, out float inv_pdf_out)
+void sample_emissive_meshes(vec3 pos, vec3 normal, float bias, inout uint seed,
+                            uint pixel_idx, vec3 throughput_albedo,
+                            vec3 R_dir, float rough)
 {
-    result = vec3(0.0);
-    inv_pdf_out = 0.0;
-    uint mesh_count = u_emissive_mesh_count;
-    if (mesh_count == 0u)
-        return;
-
-    for (uint i = 0u; i < mesh_count; i++)
+    for (uint i = 0u; i < u_mesh_count; i++)
     {
-        uint mesh_idx = emissive_mesh_indices[i];
+        uint mesh_idx = i;
         s_mesh_descriptor mesh = meshes[mesh_idx];
         s_material        mat  = materials[mesh.material];
 
@@ -156,19 +137,28 @@ void sample_emissive_meshes(vec3 pos, vec3 normal, float bias, inout uint seed, 
         // Cast shadow ray from light point surface to avoid self-intersection
         vec3 shadow_origin = light_pos + light_n * max(bias, 1e-4);
         vec3 to_shading = origin - shadow_origin;
-        
-        s_ray shadow_ray;
-        shadow_ray.origin  = shadow_origin;
-        shadow_ray.dir     = normalize(to_shading);
-        shadow_ray.inv_dir = 1.0 / shadow_ray.dir;
-
-        // Exclude the sampled mesh from shadow test to prevent self-shadowing
-        if (scene_intersect_shadow_exclude(shadow_ray, dist * 0.9999, mesh_idx))
-            continue;
+        vec3 shadow_dir = normalize(to_shading);
+        float shadow_dist = length(to_shading);
 
         float inv_pdf = (float(tri_count) * tri_area * LdotLN) / dist2;
 
-        result += mat.emission.rgb * NdotL * inv_pdf;
-        inv_pdf_out = inv_pdf;
+        // MIS weight
+        vec3 pdfs = eval_bsdf_pdf_dir(normal, L, R_dir, rough);
+        float bsdf_pdf = pdfs.z;
+        float nee_pdf = 1.0 / inv_pdf;
+        float w_nee = balance_heuristic(nee_pdf, bsdf_pdf);
+
+        vec3 contrib = throughput_albedo * mat.emission.rgb * NdotL * inv_pdf * w_nee;
+
+        emit_shadow_ray(shadow_origin, shadow_dir, shadow_dist * 0.9999,
+                        contrib, pixel_idx, mesh_idx);
     }
+}
+
+vec3 sample_emissive_mis(
+    vec3 pos, vec3 N, vec3 R, float rough, float bias,
+    inout uint seed, uint pixel_idx, vec3 throughput_albedo)
+{
+    sample_emissive_meshes(pos, N, bias, seed, pixel_idx, throughput_albedo, R, rough);
+    return vec3(0.0);
 }

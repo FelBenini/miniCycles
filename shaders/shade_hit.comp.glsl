@@ -25,7 +25,8 @@ s_shade_result shade_hit(
     bool    prev_specular,
     float   prev_bsdf_pdf,
     vec3    prev_origin,
-    inout uint seed
+    inout uint seed,
+    uint    pixel_idx
 )
 {
     s_shade_result res;
@@ -57,11 +58,14 @@ s_shade_result shade_hit(
         return res;
     }
 
-    vec3 direct = sample_lights(hit.pos, N, adaptive_bias);
+    vec3 throughput_albedo = throughput * albedo;
     vec3 R = reflect(ray.dir, N);
-    direct += sample_emissive_mis(hit.pos, N, R, rough, adaptive_bias, seed);
-    res.direct_radiance = throughput * albedo * direct;
 
+    // Emit shadow rays for direct lighting — shadow kernel handles occlusion
+    sample_lights(hit.pos, N, adaptive_bias, pixel_idx, throughput_albedo);
+    sample_emissive_mis(hit.pos, N, R, rough, adaptive_bias, seed, pixel_idx, throughput_albedo);
+
+    // BSDF sampling — unchanged
     vec3 diffuse_dir = sample_hemisphere(N, seed);
     vec3 glossy_dir  = normalize(R + rough * sample_hemisphere(N, seed));
     if (dot(glossy_dir, N) < 0.0) glossy_dir = diffuse_dir;
@@ -79,4 +83,3 @@ s_shade_result shade_hit(
 
     return res;
 }
-

@@ -54,49 +54,9 @@ float balance_heuristic(float pdf1, float pdf2)
 
 float mis_emission_weight(bool prev_specular, float prev_bsdf_pdf, vec3 prev_origin, s_hit hit)
 {
-    // If previous bounce was specular or invalid PDF, skip MIS
     if (prev_specular || prev_bsdf_pdf <= 0.0)
         return 1.0;
 
-    // Compute NEE PDF for this light hit
     float nee_pdf = eval_nee_pdf(hit, prev_origin);
-
-    // Combine BSDF and NEE PDFs using balance heuristic
     return balance_heuristic(prev_bsdf_pdf, nee_pdf);
-}
-
-vec3 sample_emissive_mis(
-    vec3 pos,
-    vec3 N,
-    vec3 R,
-    float rough,
-    float bias,
-    inout uint seed
-)
-{
-    vec3 result = vec3(0.0);
-
-    // Sample emissive geometry: returns radiance contribution (L) and inverse PDF
-    vec3 L;
-    float inv_pdf;
-    sample_emissive_meshes(pos, N, bias, seed, L, inv_pdf);
-
-    // Validate sample
-    if (dot(L, L) > 1e-8 && inv_pdf > 0.0)
-    {
-        // Evaluate BSDF PDFs for this sampled direction
-        vec3 pdfs = eval_bsdf_pdf_dir(N, L, R, rough);
-        float bsdf_pdf = pdfs.z;
-
-        // Recover NEE PDF from inverse
-        float nee_pdf = 1.0 / inv_pdf;
-
-        // Compute MIS weight for NEE sample
-        float w_nee = balance_heuristic(nee_pdf, bsdf_pdf);
-
-        // Accumulate contribution with MIS weight
-        result += L * w_nee;
-    }
-    // Clamp to reduce fireflies
-    return min(result, vec3(10.0));
 }
