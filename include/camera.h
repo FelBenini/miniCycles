@@ -18,23 +18,11 @@ typedef struct s_camera
 	int		dirty;
 }	t_camera;
 
-typedef struct s_cam_uniforms
-{
-	GLint	pos;
-	GLint	forward;
-	GLint	right;
-	GLint	up;
-	GLint	fov;
-}	t_cam_uniforms;
-
 # define CAM_SPEED 0.25f
 # define CAM_SENSITIVITY 0.05f
 
 t_camera		camera_create(float x, float y, float z, float fov_deg);
-void			upload_camera(GLuint program, t_cam_uniforms u, t_camera *cam);
 void			camera_update_basis(t_camera *cam);
-t_cam_uniforms	get_cam_uniform_locations(GLuint program);
-void			upload_camera(GLuint program, t_cam_uniforms u, t_camera *cam);
 void			mouse_button_callback(GLFWwindow *win, int button, int action, int mods);
 
 #endif

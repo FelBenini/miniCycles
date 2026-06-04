@@ -98,24 +98,6 @@ void	resize_callback(GLFWwindow *win, int width, int height)
 	cycles->dirty = 1;
 }
 
-static t_compute_uniforms	get_compute_uniforms(GLuint program)
-{
-	t_compute_uniforms	u;
-
-	u.loc_resolution = glGetUniformLocation(program, "u_resolution");
-	u.loc_tile_offset = glGetUniformLocation(program, "u_tile_offset");
-	u.loc_mesh_count = glGetUniformLocation(program, "u_mesh_count");
-	u.loc_frame_index = glGetUniformLocation(program, "u_frame_index");
-	u.loc_reset_samples = glGetUniformLocation(program, "u_reset_samples");
-	u.loc_ambient_color = glGetUniformLocation(program, "u_ambient_color");
-	u.loc_sky_tex = glGetUniformLocation(program, "u_sky_tex");
-	u.loc_sky_intensity = glGetUniformLocation(program, "u_sky_intensity");
-	u.loc_light_count = glGetUniformLocation(program, "u_light_count");
-	u.loc_emissive_mesh_count = glGetUniformLocation(program, "u_emissive_mesh_count");
-	u.loc_max_bounces = glGetUniformLocation(program, "u_max_bounces");
-	return (u);
-}
-
 t_cycles	init_cycles(void)
 {
 	t_cycles cycles;
@@ -186,17 +168,20 @@ t_cycles	init_cycles(void)
 	cycles.fullscreen_program = shader_create_graphics("shaders/fullscreen.vert.glsl",
 			"shaders/fullscreen.frag.glsl");
 
-	// --- Retrieve uniform locations ---
-	cycles.gen_ray_u = get_compute_uniforms(cycles.gen_ray_prog);
-	cycles.intersect_u = get_compute_uniforms(cycles.intersect_prog);
-	cycles.shade_u = get_compute_uniforms(cycles.shade_prog);
-	cycles.accumulate_u = get_compute_uniforms(cycles.accumulate_prog);
-	cycles.shadow_u = get_compute_uniforms(cycles.shadow_prog);
-	cycles.cam_u = get_cam_uniform_locations(cycles.gen_ray_prog);
-	cycles.fragment_u.loc_accumulation_tex_fs = glGetUniformLocation(cycles.fullscreen_program, "u_accumulation_tex");
-	cycles.fragment_u.loc_tonemap_fs = glGetUniformLocation(cycles.fullscreen_program, "u_tonemap");
-	cycles.fragment_u.loc_lut_tex_fs = glGetUniformLocation(cycles.fullscreen_program, "u_lut_tex");
-	cycles.fragment_u.loc_lut_size_fs = glGetUniformLocation(cycles.fullscreen_program, "u_lut_size");
+	// --- Scene UBO (shared by all compute programs, layout(std140, binding = 0) in shader) ---
+	glGenBuffers(1, &cycles.scene_ubo);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, cycles.scene_ubo);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(t_scene_ubo), NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	// --- Per-tile uniform (only on gen_ray_prog) ---
+	cycles.tile_offset_loc = glGetUniformLocation(cycles.gen_ray_prog, "u_tile_offset");
+
+	// --- Fragment shader uniforms ---
+	cycles.loc_accumulation_tex_fs = glGetUniformLocation(cycles.fullscreen_program, "u_accumulation_tex");
+	cycles.loc_tonemap_fs = glGetUniformLocation(cycles.fullscreen_program, "u_tonemap");
+	cycles.loc_lut_tex_fs = glGetUniformLocation(cycles.fullscreen_program, "u_lut_tex");
+	cycles.loc_lut_size_fs = glGetUniformLocation(cycles.fullscreen_program, "u_lut_size");
 
 	// --- Render targets ---
 	cycles.tex = gen_tex(WIDTH, HEIGHT);

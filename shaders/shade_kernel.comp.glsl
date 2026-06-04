@@ -6,11 +6,11 @@ void main()
     if (idx >= active_count) return;
 
     s_path_state state = ray_queue[idx];
-    if (state.alive == 0u)
-    {
-        next_ray_queue[idx] = state;
-        return;
-    }
+	if (state.alive == 0u)
+	{
+		next_ray_queue[idx] = state;
+    	return;
+	}
 
     s_ray ray;
     ray.origin  = state.origin;
@@ -31,7 +31,6 @@ void main()
     if (res.alpha < 1.0 && rand(state.seed) > res.alpha)
     {
         state.origin = hit.pos + ray.dir * adaptive_bias;
-        state.bounce--;
     }
     else if (res.terminate)
     {
@@ -53,18 +52,21 @@ void main()
             state.origin  = hit.pos + res.N * adaptive_bias;
             state.dir     = res.new_dir;
             state.inv_dir = 1.0 / res.new_dir;
-
-            if (state.bounce >= 1)
-            {
-                float p = clamp(max(state.throughput.r, max(state.throughput.g, state.throughput.b)), 0.05, 0.95);
-                if (rand(state.seed) > p)
-                    state.alive = 0u;
-                else
-                    state.throughput /= p;
-            }
         }
     }
 
     state.bounce++;
+	if (state.bounce >= 3)
+	{
+    	float lum = max(state.throughput.r,
+        	        max(state.throughput.g, state.throughput.b));
+    	float p = clamp(lum, 0.05, 0.95);
+    	if (rand(state.seed) > p)
+    	{
+    		state.alive = 0u;
+    	}
+    	else
+        	state.throughput /= p;
+	}
     next_ray_queue[idx] = state;
 }

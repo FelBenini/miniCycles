@@ -80,7 +80,7 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 		}
 		else
 			reset_samples = 0;
-		upload_camera(cycles.gen_ray_prog, cycles.cam_u, &scene.camera);
+		camera_update_basis(&scene.camera);
 		was_preview = cycles.preview;
 		render_frame(
 			cycles,

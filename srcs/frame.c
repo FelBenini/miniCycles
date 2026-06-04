@@ -2,24 +2,45 @@
 #include <stdio.h>
 #include <string.h>
 
-static void	set_common_uniforms(GLuint prog, t_compute_uniforms u,
-				t_scene scene, float rx, float ry,
+// Upload the per-frame scene UBO once before the tile loop.
+static void	upload_scene_ubo(t_cycles cycles, t_scene scene,
 				uint32_t frame_index, uint32_t reset_samples,
-				int max_bounces)
+				int max_bounces, float rx, float ry)
 {
-	glUseProgram(prog);
-	glUniform4f(u.loc_ambient_color,
-		scene.ambient.x, scene.ambient.y,
-		scene.ambient.z, scene.ambient.w);
-	glUniform2f(u.loc_resolution, rx, ry);
-	glUniform1ui(u.loc_mesh_count, scene.mesh_count);
-	glUniform1i(u.loc_sky_tex, scene.sky_tex);
-	glUniform1f(u.loc_sky_intensity, scene.sky_intensity);
-	glUniform1ui(u.loc_frame_index, frame_index);
-	glUniform1ui(u.loc_reset_samples, reset_samples);
-	glUniform1ui(u.loc_light_count, scene.light_count);
-	glUniform1ui(u.loc_emissive_mesh_count, scene.emissive_mesh_count);
-	glUniform1i(u.loc_max_bounces, max_bounces);
+	t_scene_ubo	ubo;
+
+	ubo.resolution[0] = rx;
+	ubo.resolution[1] = ry;
+	ubo.cam_pos[0] = cycles.cam->pos.x;
+	ubo.cam_pos[1] = cycles.cam->pos.y;
+	ubo.cam_pos[2] = cycles.cam->pos.z;
+	ubo.cam_forward[0] = cycles.cam->forward.x;
+	ubo.cam_forward[1] = cycles.cam->forward.y;
+	ubo.cam_forward[2] = cycles.cam->forward.z;
+	ubo.cam_right[0] = cycles.cam->right.x;
+	ubo.cam_right[1] = cycles.cam->right.y;
+	ubo.cam_right[2] = cycles.cam->right.z;
+	ubo.cam_up[0] = cycles.cam->up.x;
+	ubo.cam_up[1] = cycles.cam->up.y;
+	ubo.cam_up[2] = cycles.cam->up.z;
+	ubo.cam_fov = cycles.cam->fov;
+	ubo.ambient_color[0] = scene.ambient.x;
+	ubo.ambient_color[1] = scene.ambient.y;
+	ubo.ambient_color[2] = scene.ambient.z;
+	ubo.ambient_color[3] = scene.ambient.w;
+	ubo.sky_tex = scene.sky_tex;
+	ubo.sky_intensity = scene.sky_intensity;
+	ubo.mesh_count = scene.mesh_count;
+	ubo.light_count = scene.light_count;
+	ubo.emissive_mesh_count = scene.emissive_mesh_count;
+	ubo.frame_index = frame_index;
+	ubo.reset_samples = reset_samples;
+	ubo.max_bounces = max_bounces;
+
+	glBindBuffer(GL_UNIFORM_BUFFER, cycles.scene_ubo);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(t_scene_ubo), &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, cycles.scene_ubo);
 }
 
 static void	tile_reset(t_cycles cycles)
@@ -40,7 +61,7 @@ static void	tile_gen_rays(t_cycles cycles, int tile_x, int tile_y,
 				int groups_x, int groups_y)
 {
 	glUseProgram(cycles.gen_ray_prog);
-	glUniform2f(cycles.gen_ray_u.loc_tile_offset, (float)tile_x, (float)tile_y);
+	glUniform2f(cycles.tile_offset_loc, (float)tile_x, (float)tile_y);
 	glDispatchCompute(groups_x, groups_y, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
@@ -112,29 +133,12 @@ void	render_frame(
 	render_width = preview ? cycles.preview_width : cycles.width;
 	render_height = preview ? cycles.preview_height : cycles.height;
 
-	set_common_uniforms(cycles.gen_ray_prog, cycles.gen_ray_u,
-		scene, (float)render_width, (float)render_height,
-		frame_index, reset_samples, max_bounces);
-	set_common_uniforms(cycles.intersect_prog, cycles.intersect_u,
-		scene, (float)render_width, (float)render_height,
-		frame_index, reset_samples, max_bounces);
-	set_common_uniforms(cycles.shade_prog, cycles.shade_u,
-		scene, (float)render_width, (float)render_height,
-		frame_index, reset_samples, max_bounces);
-	set_common_uniforms(cycles.shadow_prog, cycles.shadow_u,
-		scene, (float)render_width, (float)render_height,
-		frame_index, reset_samples, max_bounces);
-	set_common_uniforms(cycles.accumulate_prog, cycles.accumulate_u,
-		scene, (float)render_width, (float)render_height,
-		frame_index, reset_samples, max_bounces);
+	upload_scene_ubo(cycles, scene, frame_index, reset_samples,
+		max_bounces, (float)render_width, (float)render_height);
 
 	// Clear shadow accumulation buffer (per-pixel direct lighting)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.shadow_accum_ssbo);
-	GLsizeiptr accum_size = (GLsizeiptr)MAX_RENDER_PIXELS * 3 * sizeof(GLuint);
-	void *accum_data = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0,
-		accum_size, GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_WRITE_BIT);
-	memset(accum_data, 0, accum_size);
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &(GLuint){0});
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -184,12 +188,10 @@ void	render_frame(
 
 			// Reset shadow counter before bounce loop (offset 4 in combined counters)
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.counters_ssbo);
-			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-			GLuint sc_zero = 0;
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), sizeof(sc_zero), &sc_zero);
+			glClearBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_R32UI,
+				sizeof(GLuint), sizeof(GLuint),   // size
+    			GL_RED_INTEGER, GL_UNSIGNED_INT, &(GLuint){0});
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
 			tile_reset(cycles);
 			tile_gen_rays(cycles, tile_x, tile_y,
 				groups_x, groups_y);
@@ -202,7 +204,13 @@ void	render_frame(
 			tiles_dispatched++;
 		}
 	}
-
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, cycles.counters_ssbo);
+	glClearBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_R32UI,
+    	sizeof(GLuint),        // offset: skip active_count
+		sizeof(GLuint) * 2,    // size: shadow_count + next_count
+		GL_RED_INTEGER, GL_UNSIGNED_INT, &(GLuint){0});
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	// Cleanup fence after all tiles are done
 	if (cycles.tile_fence)
 	{
@@ -218,11 +226,11 @@ void	render_frame(
 	glUseProgram(cycles.fullscreen_program);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glUniform1ui(cycles.fragment_u.loc_accumulation_tex_fs, 0);
-	glUniform1ui(cycles.fragment_u.loc_tonemap_fs, cycles.tonemap);
+	glUniform1ui(cycles.loc_accumulation_tex_fs, 0);
+	glUniform1ui(cycles.loc_tonemap_fs, cycles.tonemap);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_3D, cycles.lut_tex);
-	glUniform1i(cycles.fragment_u.loc_lut_tex_fs, 1);
-	glUniform1i(cycles.fragment_u.loc_lut_size_fs, cycles.lut_size);
+	glUniform1i(cycles.loc_lut_tex_fs, 1);
+	glUniform1i(cycles.loc_lut_size_fs, cycles.lut_size);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }

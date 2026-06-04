@@ -32,34 +32,31 @@
 # define NO_TONEMAP 0
 # define CUBE_LUT_TONEMAP 1
 
-typedef struct s_compute_uniforms
+// CPU-side mirror of the SceneParams UBO (std140 layout)
+typedef struct s_scene_ubo
 {
-	GLint	loc_resolution;
-	GLint	loc_tile_offset;
-	GLint	loc_mesh_count;
-	GLint	loc_frame_index;
-	GLint	loc_reset_samples;
-	GLint	loc_ambient_color;
-	GLint	loc_sky_tex;
-	GLint	loc_sky_intensity;
-	GLint	loc_light_count;
-	GLint	loc_emissive_mesh_count;
-	GLint	loc_max_bounces;
-}	t_compute_uniforms;
-
-typedef struct s_fragment_uniforms
-{
-	GLint	loc_accumulation_tex_fs;
-	GLint	loc_tonemap_fs;
-	GLint	loc_lut_tex_fs;
-	GLint	loc_lut_size_fs;
-}	t_fragment_uniforms;
-
-typedef struct s_all_uniforms
-{
-	t_compute_uniforms	compute;
-	t_fragment_uniforms	fragment;
-}	t_all_uniforms;
+	float	resolution[2];
+	float	_pad_00[2];
+	float	cam_pos[3];
+	float	_pad_cam_pos;
+	float	cam_forward[3];
+	float	_pad_cam_forward;
+	float	cam_right[3];
+	float	_pad_cam_right;
+	float	cam_up[3];
+	float	_pad_cam_up;
+	float	cam_fov;
+	float	_pad_fov[3];
+	float	ambient_color[4];
+	int		sky_tex;
+	float	sky_intensity;
+	uint32_t mesh_count;
+	uint32_t light_count;
+	uint32_t emissive_mesh_count;
+	uint32_t frame_index;
+	uint32_t reset_samples;
+	int		max_bounces;
+}	t_scene_ubo;
 
 typedef struct s_cycles
 {
@@ -83,19 +80,18 @@ typedef struct s_cycles
 	GLuint			shade_prog;
 	GLuint			shadow_prog;
 	GLuint			accumulate_prog;
+	GLuint			scene_ubo;
+	GLint			tile_offset_loc;
+	GLint			loc_accumulation_tex_fs;
+	GLint			loc_tonemap_fs;
+	GLint			loc_lut_tex_fs;
+	GLint			loc_lut_size_fs;
 	GLuint			ray_queue_ssbo[2];
 	GLuint			counters_ssbo;
 	GLuint			hit_queue_ssbo;
 	GLuint			shadow_queue_ssbo;
 	GLuint			shadow_accum_ssbo;
 	GLsync			tile_fence;
-	t_compute_uniforms	gen_ray_u;
-	t_compute_uniforms	intersect_u;
-	t_compute_uniforms	shade_u;
-	t_compute_uniforms	shadow_u;
-	t_compute_uniforms	accumulate_u;
-	t_cam_uniforms		cam_u;
-	t_fragment_uniforms	fragment_u;
 }	t_cycles;
 
 t_cycles		init_cycles(void);

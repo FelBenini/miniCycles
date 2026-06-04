@@ -31,25 +31,4 @@ void	camera_update_basis(t_camera *cam)
 	};
 }
 
-t_cam_uniforms	get_cam_uniform_locations(GLuint program)
-{
-	t_cam_uniforms	u;
 
-	u.pos = glGetUniformLocation(program, "u_cam_pos");
-	u.forward = glGetUniformLocation(program, "u_cam_forward");
-	u.right = glGetUniformLocation(program, "u_cam_right");
-	u.up = glGetUniformLocation(program, "u_cam_up");
-	u.fov = glGetUniformLocation(program, "u_cam_fov");
-	return (u);
-}
-
-void	upload_camera(GLuint program, t_cam_uniforms u, t_camera *cam)
-{
-	camera_update_basis(cam);
-	glUseProgram(program);
-	glUniform3f(u.pos, cam->pos.x, cam->pos.y, cam->pos.z);
-	glUniform3f(u.forward, cam->forward.x, cam->forward.y, cam->forward.z);
-	glUniform3f(u.right, cam->right.x, cam->right.y, cam->right.z);
-	glUniform3f(u.up, cam->up.x, cam->up.y, cam->up.z);
-	glUniform1f(u.fov, cam->fov);
-}

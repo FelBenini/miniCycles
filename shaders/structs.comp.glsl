@@ -1,25 +1,33 @@
 layout (binding = 0, rgba32f) uniform image2D u_output;
 
-// Camera
+// Scene UBO — uploaded once per frame, shared by all compute shaders
+layout(std140, binding = 0) uniform SceneParams {
+    vec2  u_resolution;
+    vec2  _pad_00;
+    vec3  u_cam_pos;
+    float _pad_cam_pos;
+    vec3  u_cam_forward;
+    float _pad_cam_forward;
+    vec3  u_cam_right;
+    float _pad_cam_right;
+    vec3  u_cam_up;
+    float _pad_cam_up;
+    float u_cam_fov;
+    float _pad_fov_0;
+    float _pad_fov_1;
+    float _pad_fov_2;
+    vec4  u_ambient_color;
+    int   u_sky_tex;
+    float u_sky_intensity;
+    uint  u_mesh_count;
+    uint  u_light_count;
+    uint  u_emissive_mesh_count;
+    uint  u_frame_index;
+    uint  u_reset_samples;
+    int   u_max_bounces;
+};
 
-uniform vec2  u_resolution;
-uniform vec2  u_tile_offset;
-uniform vec3  u_cam_pos;
-uniform vec3  u_cam_forward;
-uniform vec3  u_cam_right;
-uniform vec3  u_cam_up;
-uniform float u_cam_fov;
-
-uniform vec4  u_ambient_color;
-uniform int   u_sky_tex;
-uniform float u_sky_intensity;
-uniform uint u_mesh_count;
-uniform uint u_light_count;
-uniform uint u_emissive_mesh_count;
-// Progressive sampling control
-uniform uint u_frame_index;   // increment every frame
-uniform uint u_reset_samples; // set to 1 when camera moves
-uniform int  u_max_bounces;
+uniform vec2 u_tile_offset;
 
 // Structs
 
@@ -183,7 +191,8 @@ layout(std430, binding = 12) buffer NextRayQueue {
 layout(std430, binding = 13) buffer Counters {
     uint active_count;
     uint shadow_count;
-    uint cnt_pad[2];
+    uint next_count;
+	uint _padding;
 };
 layout(std430, binding = 14) buffer HitQueue {
     s_hit hit_queue[];
