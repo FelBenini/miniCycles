@@ -52,7 +52,29 @@ static int	rebuild_flat_triangle_array(t_scene *scene)
 		scene->descriptors[i].tri_count = curr_mesh->triangle_count;
 		scene->descriptors[i].smooth = curr_mesh->smooth;
 		scene->descriptors[i].material = curr_mesh->material_index;
-		scene->descriptors[i].direction = curr_mesh->direction;
+		// Precompute rotation columns from mesh direction (mirrors mat_from_dir logic)
+		float  dx = curr_mesh->direction.x;
+		float  dy = curr_mesh->direction.y;
+		float  dz = curr_mesh->direction.z;
+		float  len = sqrtf(dx*dx + dy*dy + dz*dz);
+		if (len < 1e-6f)
+		{
+			scene->descriptors[i].rot_col0 = (t_vec4){1,0,0,0};
+			scene->descriptors[i].rot_col1 = (t_vec4){0,1,0,0};
+			scene->descriptors[i].rot_col2 = (t_vec4){0,0,1,0};
+		}
+		else
+		{
+			t_vec4  fwd = {dx/len, dy/len, dz/len, 0};
+			t_vec4  world_up = (fabsf(fwd.y) < 0.999f)
+				? (t_vec4){0,1,0,0}
+				: (t_vec4){1,0,0,0};
+			t_vec4  right = vec4_normalize(vec4_cross(world_up, fwd));
+			t_vec4  up = vec4_cross(fwd, right);
+			scene->descriptors[i].rot_col0 = right;
+			scene->descriptors[i].rot_col1 = up;
+			scene->descriptors[i].rot_col2 = fwd;
+		}
 		offset += curr_mesh->triangle_count;
 		i++;
 	}

@@ -22,11 +22,12 @@ bool scene_intersect(s_ray ray_world, out s_hit hit)
         if (node.left_child == 0 && node.right_child == 0)
         {
             uint mesh_idx = node.mesh_index;
-            mat3 R        = mat_from_dir(meshes[mesh_idx].direction.xyz);
-            mat3 R_inv    = transpose(R);
+            s_mesh_descriptor m = meshes[mesh_idx];
+            mat3 R     = mat3(m.rot_col0.xyz, m.rot_col1.xyz, m.rot_col2.xyz);
+            mat3 R_inv = transpose(R);
 
             s_ray ray;
-            ray.origin  = R_inv * (ray_world.origin - meshes[mesh_idx].position.xyz);
+            ray.origin  = R_inv * (ray_world.origin - m.position.xyz);
             ray.dir     = R_inv * ray_world.dir;
             ray.inv_dir = 1.0 / ray.dir;
 
@@ -108,10 +109,11 @@ bool scene_intersect_shadow_exclude(s_ray ray_world, float max_t, uint exclude_m
             if (mesh_idx == exclude_mesh)
                 continue;
             
-            mat3 R_inv    = transpose(mat_from_dir(meshes[mesh_idx].direction.xyz));
+            s_mesh_descriptor m = meshes[mesh_idx];
+            mat3 R_inv = transpose(mat3(m.rot_col0.xyz, m.rot_col1.xyz, m.rot_col2.xyz));
 
             s_ray ray;
-            ray.origin  = R_inv * (ray_world.origin - meshes[mesh_idx].position.xyz);
+            ray.origin  = R_inv * (ray_world.origin - m.position.xyz);
             ray.dir     = R_inv * ray_world.dir;
             ray.inv_dir = 1.0 / ray.dir;
 

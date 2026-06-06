@@ -129,7 +129,6 @@ t_cycles	init_cycles(void)
 	cycles.intersect_prog = shader_create_compute_asm(
 		"shaders/structs.comp.glsl",
 		"shaders/triangle.comp.glsl",
-		"shaders/mat_from_dir.comp.glsl",
 		"shaders/intersect_aabb.comp.glsl",
 		"shaders/blas_intersect.comp.glsl",
 		"shaders/scene_intersect.comp.glsl",
@@ -139,7 +138,6 @@ t_cycles	init_cycles(void)
 	cycles.shade_prog = shader_create_compute_asm(
 		"shaders/structs.comp.glsl",
 		"shaders/triangle.comp.glsl",
-		"shaders/mat_from_dir.comp.glsl",
 		"shaders/intersect_aabb.comp.glsl",
 		"shaders/blas_intersect.comp.glsl",
 		"shaders/scene_intersect.comp.glsl",
@@ -154,7 +152,6 @@ t_cycles	init_cycles(void)
 	cycles.shadow_prog = shader_create_compute_asm(
 		"shaders/structs.comp.glsl",
 		"shaders/triangle.comp.glsl",
-		"shaders/mat_from_dir.comp.glsl",
 		"shaders/intersect_aabb.comp.glsl",
 		"shaders/blas_intersect.comp.glsl",
 		"shaders/scene_intersect.comp.glsl",

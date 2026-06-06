@@ -63,6 +63,8 @@ uint32_t	scene_add_mesh(t_scene *scene, t_mesh mesh, uint32_t material_index)
 	};
 	scene->descriptors[index].position.w = compute_bounding_radius(&mesh);
 	scene->bvhs[index] = bvh_build(mesh.triangles, mesh.triangle_count);
+	scene->descriptors[index].local_bbox_min = scene->bvhs[index].nodes[0].bbox_min;
+	scene->descriptors[index].local_bbox_max = scene->bvhs[index].nodes[0].bbox_max;
 	if (material_index < scene->material_count
 		&& (scene->materials[material_index].emission.x > 0.0f
 			|| scene->materials[material_index].emission.y > 0.0f

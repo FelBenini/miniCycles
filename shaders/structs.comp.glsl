@@ -57,7 +57,11 @@ struct s_triangle_texcoords {
 
 struct s_mesh_descriptor {
     vec4  position;
-    vec4  direction;
+    vec4  rot_col0;
+    vec4  rot_col1;
+    vec4  rot_col2;
+    vec4  local_bbox_min;
+    vec4  local_bbox_max;
     uint  tri_offset;
     uint  tri_count;
     uint  smooth_shade;

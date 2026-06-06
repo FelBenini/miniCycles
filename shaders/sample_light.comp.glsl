@@ -89,7 +89,7 @@ void sample_emissive_meshes(vec3 pos, vec3 normal, float bias, inout uint seed,
         if (tri_count == 0u)
             continue;
 
-        mat3 R = mat_from_dir(mesh.direction.xyz);
+        mat3 R = mat3(mesh.rot_col0.xyz, mesh.rot_col1.xyz, mesh.rot_col2.xyz);
 
         float r0      = rand(seed);
         uint  tri_idx = tri_offset + min(uint(r0 * float(tri_count)), tri_count - 1u);

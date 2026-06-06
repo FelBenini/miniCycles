@@ -28,7 +28,11 @@ typedef struct s_image_ssbo{
 typedef struct s_mesh_descriptor
 {
 	t_vec4				position; // xyz = world position, w = bounding radius
-	t_vec4				direction;
+	t_vec4				rot_col0; // right   column of local→world rotation
+	t_vec4				rot_col1; // up      column
+	t_vec4				rot_col2; // forward column (normalized direction)
+	t_vec4				local_bbox_min; // tight local AABB from BLAS root
+	t_vec4				local_bbox_max;
 	uint32_t			tri_offset; // start index into the global triangle array
 	uint32_t			tri_count;
 	uint32_t			smooth;

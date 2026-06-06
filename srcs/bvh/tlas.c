@@ -3,26 +3,45 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-static void	compute_mesh_bbox(t_mesh_descriptor *descriptor,
+static void	compute_mesh_bbox(t_mesh_descriptor *d,
 								t_vec4 *out_min, t_vec4 *out_max)
 {
-	t_vec3	pos;
-	float	radius;
+	t_vec4	mn = d->local_bbox_min;
+	t_vec4	mx = d->local_bbox_max;
+	float	cx[8] = {mn.x, mx.x, mn.x, mx.x, mn.x, mx.x, mn.x, mx.x};
+	float	cy[8] = {mn.y, mn.y, mx.y, mx.y, mn.y, mn.y, mx.y, mx.y};
+	float	cz[8] = {mn.z, mn.z, mn.z, mn.z, mx.z, mx.z, mx.z, mx.z};
+	t_vec4	r0 = d->rot_col0;
+	t_vec4	r1 = d->rot_col1;
+	t_vec4	r2 = d->rot_col2;
+	float	px = d->position.x;
+	float	py = d->position.y;
+	float	pz = d->position.z;
+	float	wx, wy, wz;
+	int		i;
 
-	pos.x = descriptor->position.x;
-	pos.y = descriptor->position.y;
-	pos.z = descriptor->position.z;
-	radius = descriptor->position.w;
+	wx = r0.x*cx[0] + r1.x*cy[0] + r2.x*cz[0] + px;
+	wy = r0.y*cx[0] + r1.y*cy[0] + r2.y*cz[0] + py;
+	wz = r0.z*cx[0] + r1.z*cy[0] + r2.z*cz[0] + pz;
+	out_min->x = wx; out_max->x = wx;
+	out_min->y = wy; out_max->y = wy;
+	out_min->z = wz; out_max->z = wz;
+	out_min->w = 0.0f; out_max->w = 0.0f;
 
-	out_min->x = pos.x - radius;
-	out_min->y = pos.y - radius;
-	out_min->z = pos.z - radius;
-	out_min->w = 0.0f;
-
-	out_max->x = pos.x + radius;
-	out_max->y = pos.y + radius;
-	out_max->z = pos.z + radius;
-	out_max->w = 0.0f;
+	i = 1;
+	while (i < 8)
+	{
+		wx = r0.x*cx[i] + r1.x*cy[i] + r2.x*cz[i] + px;
+		wy = r0.y*cx[i] + r1.y*cy[i] + r2.y*cz[i] + py;
+		wz = r0.z*cx[i] + r1.z*cy[i] + r2.z*cz[i] + pz;
+		if (wx < out_min->x) out_min->x = wx;
+		if (wy < out_min->y) out_min->y = wy;
+		if (wz < out_min->z) out_min->z = wz;
+		if (wx > out_max->x) out_max->x = wx;
+		if (wy > out_max->y) out_max->y = wy;
+		if (wz > out_max->z) out_max->z = wz;
+		i++;
+	}
 }
 
 static void	compute_meshes_bbox(t_mesh_descriptor *descriptors, uint32_t *indices,
