@@ -46,7 +46,9 @@ typedef struct s_scene_ubo
 	float	cam_up[3];
 	float	_pad_cam_up;
 	float	cam_fov;
-	float	_pad_fov[3];
+	float	lens_radius;
+	float	focal_distance;
+	float	_pad_fov;
 	float	ambient_color[4];
 	int		sky_tex;
 	float	sky_intensity;

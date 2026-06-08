@@ -13,9 +13,9 @@ layout(std140, binding = 0) uniform SceneParams {
     vec3  u_cam_up;
     float _pad_cam_up;
     float u_cam_fov;
-    float _pad_fov_0;
-    float _pad_fov_1;
-    float _pad_fov_2;
+    float u_lens_radius;
+    float u_focal_distance;
+    float _pad_fov;
     vec4  u_ambient_color;
     int   u_sky_tex;
     float u_sky_intensity;

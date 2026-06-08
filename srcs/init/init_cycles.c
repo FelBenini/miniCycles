@@ -3,13 +3,12 @@
 #include "shader.h"
 #include "cycles.h"
 #include "lut.h"
-#include "camera.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <string.h>
 
-#define WIDTH 320
-#define HEIGHT 180
+#define WIDTH 1920
+#define HEIGHT 1080
 
 static GLuint	gen_tex(int width, int height)
 {

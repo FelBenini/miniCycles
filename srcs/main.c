@@ -81,6 +81,12 @@ static void	register_callbacks(t_cycles cycles, t_camera *cam)
 		else
 			reset_samples = 0;
 		camera_update_basis(&scene.camera);
+		if (scene.camera.dirty)
+			printf("C %f,%f,%f %f,%f,%f %f %f %f\n",
+				scene.camera.pos.x, scene.camera.pos.y, scene.camera.pos.z,
+				scene.camera.forward.x, scene.camera.forward.y, scene.camera.forward.z,
+				scene.camera.fov * (180.0f / 3.14159265f),
+				scene.camera.lens_radius, scene.camera.focal_distance);
 		was_preview = cycles.preview;
 		render_frame(
 			cycles,

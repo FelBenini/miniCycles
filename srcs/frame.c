@@ -24,6 +24,8 @@ static void	upload_scene_ubo(t_cycles cycles, t_scene scene,
 	ubo.cam_up[1] = cycles.cam->up.y;
 	ubo.cam_up[2] = cycles.cam->up.z;
 	ubo.cam_fov = cycles.cam->fov;
+	ubo.lens_radius = cycles.cam->lens_radius;
+	ubo.focal_distance = cycles.cam->focal_distance;
 	ubo.ambient_color[0] = scene.ambient.x;
 	ubo.ambient_color[1] = scene.ambient.y;
 	ubo.ambient_color[2] = scene.ambient.z;
@@ -127,7 +129,7 @@ void	render_frame(
 	int		render_height;
 	int		tile_width = 128;
 	int		tile_height = 128;
-	int		max_bounces = preview ? 3 : 6;
+	int		max_bounces = preview ? 3 : 4;
 
 	tex = preview ? cycles.preview_tex : cycles.tex;
 	render_width = preview ? cycles.preview_width : cycles.width;

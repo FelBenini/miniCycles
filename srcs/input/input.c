@@ -62,4 +62,28 @@ void	handle_input(GLFWwindow *win, t_camera *cam)
 	}
 	if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(win, 1);
+	if (glfwGetKey(win, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		cam->dirty = 1;
+		cam->lens_radius -= APERTURE_SPEED;
+		if (cam->lens_radius < 0.0f)
+			cam->lens_radius = 0.0f;
+	}
+	if (glfwGetKey(win, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		cam->dirty = 1;
+		cam->lens_radius += APERTURE_SPEED;
+	}
+	if (glfwGetKey(win, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		cam->dirty = 1;
+		cam->focal_distance -= FOCAL_DIST_SPEED;
+		if (cam->focal_distance < 0.0f)
+			cam->focal_distance = 0.0f;
+	}
+	if (glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS)
+	{
+		cam->dirty = 1;
+		cam->focal_distance += FOCAL_DIST_SPEED;
+	}
 }
