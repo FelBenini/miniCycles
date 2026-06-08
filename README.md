@@ -29,6 +29,7 @@ A physically-based path tracer written in C and OpenGL Compute Shaders, inspired
 ## Features
 
 ### Rendering
+- **Wavefront Path Tracing** - Splits the rendering pipeline into separate compute shader stages (ray gen → intersect → shade → shadow → accumulate) for better GPU SIMT utilization compared to monolithic megakernels
 - **Monte Carlo Path Tracing** - Physically accurate light transport simulation
 - **Multiple Bounce Lighting** - Configurable ray bounce depth
 - **Next Event Estimation** - Direct light sampling for faster convergence
@@ -60,6 +61,11 @@ A physically-based path tracer written in C and OpenGL Compute Shaders, inspired
 - **Spot Lights** - Cone-shaped lights with inner/outer angles
 - **Sky Lighting** - HDR environment maps
 - **Emissive Meshes** - Mesh-based area lights
+
+### Depth of Field
+- **Thin Lens Model** - Physically-based depth of field via aperture sampling
+- **Configurable Aperture** - `lens_radius` controls blur strength (adjustable at runtime with `Q`/`E`)
+- **Configurable Focal Distance** - Sets the focal plane distance (adjustable at runtime with `Z`/`C`)
 
 ### Post-Processing
 - **Tonemapping** - HDR to LDR conversion
@@ -189,7 +195,7 @@ Scene files use the `.rt` extension and contain ASCII text commands. Comments st
 ### Camera
 
 ```
-C x,y,z dx,dy,dz fov
+C x,y,z dx,dy,dz fov [lens_radius] [focal_distance]
 ```
 
 | Parameter | Description |
@@ -197,11 +203,16 @@ C x,y,z dx,dy,dz fov
 | `x,y,z` | Camera position |
 | `dx,dy,dz` | Forward direction vector |
 | `fov` | Field of view in degrees (0-180) |
+| `lens_radius` | Depth of field aperture size (optional, default 0.0) |
+| `focal_distance` | Focal plane distance for DOF (optional, default 0.0) |
 
-Example:
+Examples:
 ```
 C 0.0,0.0,5.0 0.0,0.0,-1.0 75
+C -30.0,2.0,0.0 0.5,0.0,0.0 70 0.05 8.0
 ```
+
+The two optional parameters enable depth of field via a thin lens model. When both are > 0, rays are jittered on a disk of radius `lens_radius` (larger = stronger blur) and redirected toward the focal plane at `focal_distance`. Parameters can also be tweaked at runtime with `Q`/`E` (aperture) and `Z`/`C` (focal distance).
 
 ### Ambient Light
 
@@ -331,10 +342,14 @@ Available LUTs in `assets/lut/`:
 |-----------|--------|
 | `W` / `S` | Move forward / backward |
 | `A` / `D` | Move left / right |
-| `Q` / `E` | Move down / up |
-| `Mouse` | Look around (click to capture) |
-| `ESC` | Release mouse capture / Exit |
-| `R` | Reset accumulation (re-render) |
+| `Shift` | Move down |
+| `Spacebar` | Move up |
+| `Mouse` + hold `Scroll` | Look around |
+| `Arrow Keys` | Look around |
+| `Mouse Scroll` | Change FOV |
+| `Q` / `E` | Modify Depth of Field aperture size (lens blur) |
+| `Z` / `C` | Modify the focal distance |
+| `ESC` | Exit |
 
 ## Examples
 
@@ -382,6 +397,7 @@ More complex scenes including the Bistro scene are available at:
 mini-cycles/
 ├── srcs/
 │   ├── main.c                 # Entry point
+│   ├── frame.c                # Wavefront tile dispatch: gen → intersect → shade → shadow → accumulate
 │   ├── init/                  # Initialization code
 │   ├── parser/                # .rt scene file parser
 │   ├── mesh/                  # Procedural mesh generators
@@ -392,8 +408,13 @@ mini-cycles/
 │   └── math/                  # Math utilities
 ├── include/                   # Header files
 ├── shaders/
-│   ├── pathtrace.comp.glsl    # Main compute shader
-│   └── scene_intersect.comp.glsl # Intersection routines
+│   ├── gen_ray.comp.glsl      # Primary ray generation (per-tile)
+│   ├── intersect.comp.glsl    # Ray-scene intersection (bounce loop)
+│   ├── shade.comp.glsl        # Material shading & BSDF sampling
+│   ├── shadow.comp.glsl       # Shadow/visibility rays
+│   ├── accumulate.comp.glsl   # Sample accumulation & tonemap
+│   ├── fullscreen.vert.glsl   # Fullscreen triangle vertex shader
+│   └── fullscreen.frag.glsl   # Tonemapping & LUT fragment shader
 ├── assets/
 │   ├── objs/                  # 3D models
 │   ├── skyboxes/              # HDR environment maps
@@ -404,7 +425,6 @@ mini-cycles/
 
 ## Future Plans
 
-- **Wavefront Architecture** - Migrate from megakernel to wavefront path tracing for better SIMT utilization
 - **Denoising** - Atrous Wavelet Denoiser
 - **More Primitives** - Additional procedural shapes
 
