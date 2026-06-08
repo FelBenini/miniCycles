@@ -2,7 +2,7 @@
 
 A physically-based path tracer written in C and OpenGL Compute Shaders, inspired by Blender's Cycles rendering engine. Implements Monte Carlo path tracing for realistic light transport simulation including global illumination, soft shadows, and physically-based materials.
 
-![MiniCycles Render](https://github.com/user-attachments/assets/3a897d05-1624-480a-9861-37d8aca07537)
+<img width="1918" height="822" alt="miniCycles Renderer" src="https://github.com/user-attachments/assets/695e8b2e-ea9c-4ce0-9ab5-74815406dba5" />
 
 ## Table of Contents
 
@@ -358,6 +358,13 @@ Available LUTs in `assets/lut/`:
 ./cycles ./scenes/room.rt
 ```
 <img width="1900" height="1012" alt="29" src="https://github.com/user-attachments/assets/033781e1-21a4-43af-bb4a-64a1ba507350" />
+
+### Amazon Bistro
+
+```
+available on https://github.com/FelBenini/miniCycles-scenes
+```
+<img width="1370" height="740" alt="55" src="https://github.com/user-attachments/assets/01182b5b-be6f-478c-8950-27ea431655a0" />
 
 
 ### Suzanne Scene
